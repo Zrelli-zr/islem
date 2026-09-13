@@ -223,7 +223,7 @@
   .hero-backdrop{ position:absolute; inset:0; z-index:0; overflow:hidden; background:var(--ink); }
   .hero-backdrop img{ width:100%; height:100%; object-fit:cover; object-position:center; opacity:0; filter:blur(6px) grayscale(.32) brightness(.6); transition:opacity 1100ms var(--ease), filter 1600ms var(--ease); -webkit-touch-callout:none; -webkit-user-drag:none; user-select:none; }
   .hero-backdrop.in-view img{ opacity:1; filter:blur(0) grayscale(.18) brightness(.8); }
-  .hero-scrim{ position:absolute; inset:0; z-index:1; background:linear-gradient(to bottom, rgba(5,5,5,.32) 0%, rgba(5,5,5,.4) 46%, rgba(5,5,5,.86) 100%); pointer-events:none; }
+  .hero-scrim{ position:absolute; inset:0; z-index:1; background:linear-gradient(to bottom, rgba(5,5,5,.32) 0%, rgba(5,5,5,.4) 46%, rgba(5,5,5,.86) 100%); pointer-events:none; opacity:var(--scrim-opacity, 1); }
   .hero-inner{ position:relative; z-index:2; max-width:820px; }
   /* Staggered fade-and-rise entrance, matching the considered reveal every
      scene already gets (see .scene .tag / h2 / p.caption below) — the hero
@@ -236,8 +236,8 @@
   .hero.ready .hero-inner > *:nth-child(5){ transition-delay:480ms; }
   .hero.ready .hero-inner > *:nth-child(6){ transition-delay:600ms; }
   /* Hero text order is: location headline + count phrase, "By", signature
-     (name). Both hero-place and hero-count wrap naturally on narrow phones
-     rather than forcing a single tight line.
+     (name). Both hero-work-place and hero-count wrap naturally on narrow
+     phones rather than forcing a single tight line.
 
      Spacing below is deliberately asymmetric rather than one repeated
      value: "By" sits tight against the signature since together they read
@@ -246,20 +246,47 @@
      other gap — before the CTA (tertiary), so the composition reads as
      distinct layers rather than one centered stack of text. */
   .hero-kicker{ margin-bottom:clamp(30px, 5.6vw, 60px); }
-  .hero-place{ font-family:var(--font-display); font-style:italic; font-weight:500; font-size:clamp(1.9rem, 5vw, 2.7rem); line-height:1.1; color:var(--white); margin:0 0 10px; }
+  /* Hero A's name is no longer plain text sized to match — it now reuses
+     the exact same .signature-wrap/.signature-svg markup as Hero B's own
+     signature (see the HTML), so the two are guaranteed pixel-identical at
+     every viewport width automatically, including the two short-viewport
+     overrides on .signature-svg below — one shared class, not two sizes
+     kept in sync by hand.
+
+     .hero-work-place is Hero B's "Gabès, Tunisia" location line — it used
+     to incorrectly share the .hero-place class with Hero A's name, which
+     meant matching Hero A's name to the signature's ~92px size also
+     silently blew up this location line to the same huge size. Split into
+     its own class, restored to its original, sensible kicker-line size,
+     then bumped up a step further from that original size — now that
+     Hero B no longer builds up to a second giant signature, this
+     location line is Hero B's own primary heading, so it gets the visual
+     weight to carry that job. */
+  .hero-work-place{ font-family:var(--font-display); font-style:italic; font-weight:500; font-size:calc(clamp(2.2rem, 6.2vw, 3.4rem) * var(--place-scale, 1)); line-height:1.1; color:var(--white); margin:0 0 10px; transform:translateY(var(--place-y, 0px)); }
   .hero-count{ font-family:var(--font-body); font-style:normal; font-weight:400; font-size:.82rem; letter-spacing:.16em; text-transform:uppercase; line-height:1.5; color:var(--dim); margin:0; }
   .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-  .hero .by-line{ font-family:var(--font-display); font-style:italic; font-weight:400; font-size:clamp(1.3rem, 2.8vw, 1.7rem); letter-spacing:.01em; text-transform:none; color:rgba(246,244,239,.85); margin:0 0 clamp(12px, 2vw, 18px); }
-  .signature-wrap{ margin:0 0 clamp(44px, 7.8vw, 84px); display:flex; justify-content:center; }
+  .hero-credit{ font-family:var(--font-display); font-style:italic; font-weight:400; font-size:calc(clamp(1.3rem, 2.8vw, 1.7rem) * var(--credit-scale, 1)); letter-spacing:.01em; text-transform:none; color:rgba(246,244,239,.85); margin:0 0 clamp(12px, 2vw, 18px); transform:translateY(var(--credit-y, 0px)); }
+  .signature-wrap{ margin:0 0 clamp(44px, 7.8vw, 84px); display:flex; justify-content:center; transform:translateY(var(--sig-y, 0px)) scale(var(--sig-scale, 1)); }
   .signature-svg{ width:min(90vw, 700px); height:auto; display:block; overflow:visible; }
   .signature-svg text{ font-family:var(--font-display); font-style:italic; font-weight:500; font-size:92px; fill:var(--white); fill-opacity:0; stroke:var(--white); stroke-width:1.4; stroke-linejoin:round; paint-order:stroke fill; }
   .signature-svg text.filled{ transition:fill-opacity 1100ms var(--ease); fill-opacity:1; }
-  .hero-role{ font-family:var(--font-body); font-weight:400; font-size:.82rem; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); margin:0 0 clamp(52px, 9.6vw, 108px); }
+  .hero-role{ font-family:var(--font-body); font-weight:400; font-size:calc(.82rem * var(--role-scale, 1)); letter-spacing:.16em; text-transform:uppercase; color:var(--dim); margin:0 0 clamp(52px, 9.6vw, 108px); transform:translateY(var(--role-y, 0px)); }
+  /* Admin-editable "extra line" slots (see applyHeroTextConfig() and the
+     Landing Page admin tab) — up to 2 per hero, hidden by default
+     (display:none inline in the HTML) and only shown when the admin
+     enables one with actual text. Shares .hero-role's quiet meta-line
+     look by default since that fits either hero's existing typographic
+     rhythm; -1/-2 each get their own scale/offset variable so the two
+     slots can be sized/nudged independently. */
+  .hero-extra-line{ font-family:var(--font-body); font-weight:400; letter-spacing:.1em; line-height:1.5; color:var(--dim); margin:0 0 14px; }
+  .hero-extra-line.hero-extra-1{ font-size:calc(.82rem * var(--extra1-scale, 1)); transform:translateY(var(--extra1-y, 0px)); }
+  .hero-extra-line.hero-extra-2{ font-size:calc(.82rem * var(--extra2-scale, 1)); transform:translateY(var(--extra2-y, 0px)); }
   @media (max-width:430px){
-    .hero-place{ font-size:1.5rem; }
     .hero-count{ font-size:.7rem; letter-spacing:.12em; }
-    .hero .by-line{ font-size:1.2rem; }
-    .hero-role{ font-size:.7rem; letter-spacing:.12em; }
+    .hero-credit{ font-size:calc(1.2rem * var(--credit-scale, 1)); }
+    .hero-role{ font-size:calc(.7rem * var(--role-scale, 1)); letter-spacing:.12em; }
+    .hero-extra-line.hero-extra-1{ font-size:calc(.7rem * var(--extra1-scale, 1)); }
+    .hero-extra-line.hero-extra-2{ font-size:calc(.7rem * var(--extra2-scale, 1)); }
   }
   .enter{ display:inline-flex; flex-direction:column; align-items:center; gap:16px; font-family:var(--font-body); font-size:var(--size-nav); letter-spacing:.16em; text-transform:uppercase; color:var(--white); padding:6px; border-bottom:1px solid transparent; transition:border-color 300ms var(--ease), opacity 900ms var(--ease), transform 900ms var(--ease); }
   .enter:hover{ border-color:var(--line); }
@@ -322,8 +349,7 @@
      above) is untouched. */
   @media (max-height:820px){
     .hero-kicker{ margin-bottom:16px; }
-    .hero-place{ margin-bottom:6px; }
-    .hero .by-line{ margin-bottom:10px; }
+    .hero-credit{ margin-bottom:10px; }
     .signature-wrap{ margin-bottom:16px; }
     .signature-svg{ width:min(64vw, 480px); }
     .hero-role{ margin-bottom:20px; }
@@ -343,19 +369,54 @@
      absolutely positioned so it never affects the vertical centering of
      .hero-inner above it. Hidden entirely (via .has-content) whenever no
      contact fields are configured in the About admin tab, so an unfilled
-     site shows nothing here rather than empty separators. Lifted well
-     clear of .lang-switch (fixed at the very bottom-left, see above) so
-     the two never crowd each other. */
+     site shows nothing here rather than an empty row. Lifted well clear
+     of .lang-switch (fixed at the very bottom-left, see above) so the two
+     never crowd each other. */
   .hero-contact{ position:absolute; left:0; right:0; bottom:calc(58px + var(--safe-b)); z-index:3; display:flex; flex-direction:column; align-items:center; gap:4px; padding:0 24px; opacity:0; pointer-events:none; transition:opacity 900ms var(--ease); transition-delay:520ms; }
   .hero.ready .hero-contact.has-content{ opacity:1; pointer-events:auto; }
-  .hero-contact-row{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; }
-  .hero-contact-row .dot{ color:var(--dim-2); font-size:.68rem; padding:0 2px; user-select:none; }
-  .hero-contact a{ display:inline-flex; align-items:center; justify-content:center; min-height:44px; font-family:var(--font-body); font-weight:400; font-size:.7rem; letter-spacing:.13em; text-transform:uppercase; color:var(--dim); padding:6px 10px; border-bottom:1px solid transparent; transition:color 260ms var(--ease), border-color 260ms var(--ease); }
-  .hero-contact a:hover, .hero-contact a:focus-visible{ color:var(--white); border-color:var(--line); }
-  .hero-contact a:focus-visible{ outline:none; }
+  /* Circular icon badges (see renderHeroContact()/SOCIAL_ICON_DATA in the
+     JS) — soft depth at rest via the shadow, then a deliberate lift +
+     glow on hover/focus so each one feels like a physical button rather
+     than a flat image. The icon itself (a small transparent-background
+     glyph baked in as a data: URI) just sits centered inside; all the
+     "chrome" — background, border, shadow — lives on the badge container
+     so it can animate independently of the glyph. */
+  .social-badges{ display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; }
+  .social-badge{
+    width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.16);
+    box-shadow:0 4px 12px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06);
+    opacity:0; transform:translateY(10px) scale(.9);
+    transition:opacity 500ms var(--ease), transform 260ms var(--ease), box-shadow 260ms var(--ease), background 260ms var(--ease), border-color 260ms var(--ease);
+  }
+  .hero.ready .social-badges .social-badge{ opacity:1; transform:translateY(0) scale(1); }
+  /* Each value list below lines up positionally with the 5 properties in
+     .social-badge's `transition` above (opacity, transform, box-shadow,
+     background, border-color). Only the first (opacity) actually varies
+     per badge, to stagger the entrance fade-in — the other four stay at
+     0ms in every rule so a later hover's lift/glow always responds
+     instantly, never inheriting that stagger delay. */
+  .social-badges .social-badge:nth-child(1){ transition-delay:0ms, 0ms, 0ms, 0ms, 0ms; }
+  .social-badges .social-badge:nth-child(2){ transition-delay:60ms, 0ms, 0ms, 0ms, 0ms; }
+  .social-badges .social-badge:nth-child(3){ transition-delay:120ms, 0ms, 0ms, 0ms, 0ms; }
+  .social-badges .social-badge:nth-child(4){ transition-delay:180ms, 0ms, 0ms, 0ms, 0ms; }
+  .social-badges .social-badge:nth-child(5){ transition-delay:240ms, 0ms, 0ms, 0ms, 0ms; }
+  .social-badge img{ width:18px; height:18px; display:block; opacity:.86; transition:opacity 260ms var(--ease); pointer-events:none; }
+  .social-badge:hover, .social-badge:focus-visible{
+    transform:translateY(-4px) scale(1);
+    background:rgba(255,255,255,.11);
+    border-color:rgba(255,255,255,.4);
+    box-shadow:0 12px 26px rgba(0,0,0,.5), 0 0 24px rgba(255,255,255,.4), inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .social-badge:hover img, .social-badge:focus-visible img{ opacity:1; }
+  .social-badge:active{ transform:translateY(-1px) scale(.95); }
+  .social-badge:focus-visible{ outline:none; }
   @media (max-width:430px){
     .hero-contact{ bottom:calc(50px + var(--safe-b)); }
-    .hero-contact a{ font-size:.66rem; padding:6px 8px; }
+    .social-badge{ width:40px; height:40px; }
+    .social-badge img{ width:16px; height:16px; }
   }
 
   /* The hidden admin gesture's real target (10 taps/clicks within 2s —
@@ -591,6 +652,16 @@
     .signature-svg text{ stroke:none; fill-opacity:1 !important; transition:none !important; }
     .hero-backdrop img{ transition:none !important; opacity:1 !important; filter:none !important; }
     .hero-inner > *{ transition:none !important; opacity:1 !important; transform:none !important; }
+    /* Only the entrance fade-in is disabled here — the hover lift/glow
+       stays, since it's a small, user-triggered response rather than a
+       looping or autoplaying motion. transform is intentionally NOT
+       forced with !important (only opacity is): that would also pin it
+       during :hover, since !important beats a pseudo-class's higher
+       specificity — this just overrides the resting value so the
+       entrance's translateY(10px)/scale(.9) offset doesn't apply, while
+       leaving :hover/:focus-visible's own transform free to still win
+       normally when they're active. */
+    .social-badge{ transition:box-shadow 260ms var(--ease), background 260ms var(--ease), border-color 260ms var(--ease), transform 260ms var(--ease) !important; opacity:1 !important; transform:translateY(0) scale(1); }
   }
 
   /* ===================== ADMIN ===================== */
@@ -848,6 +919,21 @@
   .crop-preview-tabs{ display:flex; gap:8px; }
   .crop-preview-tab{ font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--dim); border-bottom:2px solid transparent; padding:4px 2px; }
   .crop-preview-tab.active{ color:var(--white); border-color:var(--white); }
+  /* Visually identical to .crop-preview-tab above but a genuinely separate
+     class — NOT reused — so this preview's device toggle can never get
+     caught by the crop tool's own `.crop-preview-tab` click handler
+     (which queries by that class and blindly clears .active from every
+     match on the page). Two same-looking tab groups sharing one class was
+     exactly what broke the live preview: clicking either one fired BOTH
+     handlers and stripped the wrong group's active state. */
+  .hero-preview-device-tab{ font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--dim); border-bottom:2px solid transparent; padding:4px 2px; }
+  .hero-preview-device-tab.active{ color:var(--white); border-color:var(--white); }
+  .storage-orphan-list{ max-height:360px; overflow-y:auto; border:1px solid var(--line); margin:10px 0 16px; }
+  .storage-orphan-row{ display:flex; align-items:center; gap:10px; padding:7px 10px; border-bottom:1px solid var(--line-soft); font-size:.78rem; }
+  .storage-orphan-row:last-child{ border-bottom:none; }
+  .storage-orphan-path{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--dim); }
+  .storage-orphan-bucket{ font-size:.68rem; letter-spacing:.05em; text-transform:uppercase; color:var(--dim); opacity:.7; }
+  .storage-orphan-size{ font-variant-numeric:tabular-nums; min-width:56px; text-align:right; }
   .crop-frame{ position:relative; width:100%; max-width:480px; overflow:hidden; background:#000; touch-action:none; cursor:grab; border:1px solid var(--line); }
   .crop-frame.desktop{ aspect-ratio:16/9; }
   .crop-frame.mobile{ aspect-ratio:9/16; max-width:220px; }
@@ -859,6 +945,28 @@
   .crop-zoom-row span{ font-size:.72rem; color:var(--dim); min-width:34px; text-align:right; }
   .admin-error{ color:#ff8b7a; font-size:.8rem; }
   .admin-saved{ color:#8de08d; font-size:.78rem; align-self:center; }
+
+  /* ---- Hero Text editor (form + live preview, side by side) ---- */
+  .hero-text-editor{ display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; margin-top:14px; }
+  .hero-text-form{ flex:1 1 340px; min-width:280px; }
+  .hero-text-preview{ flex:1 1 320px; min-width:260px; position:sticky; top:12px; }
+  .hero-text-size-row{ margin:0 0 16px; }
+  .hero-text-size-row .row-label{ display:flex; justify-content:space-between; font-size:.72rem; letter-spacing:.05em; text-transform:uppercase; color:var(--dim); margin-bottom:4px; }
+  .hero-text-size-row input[type="range"]{ width:100%; }
+  .hero-text-extra{ border-top:1px solid var(--line-soft); padding-top:14px; margin-top:14px; }
+  .hero-text-extra input[type="text"][disabled]{ opacity:.4; }
+  .hero-text-extra .hero-text-size-row input[disabled]{ opacity:.4; }
+  /* The iframe is rendered at its true simulated size (e.g. 1280×800 for
+     "desktop", 375×780 for "mobile" — see HERO_PREVIEW_SIZES) and then
+     scaled DOWN via CSS transform to fit the admin column — never sized
+     directly to the container — because vw/vh-based clamp() sizing and
+     the 860px layout breakpoint need a real viewport of that size to
+     evaluate correctly; a same-size iframe scaled visually is the only
+     way to preview "how this looks on a phone" from a desktop admin
+     screen. See updateHeroPreview() for the scale-factor math. */
+  .hero-preview-viewport{ position:relative; overflow:hidden; border-radius:10px; border:1px solid var(--line); background:#050505; }
+  .hero-preview-viewport iframe{ position:absolute; top:0; left:0; transform-origin:top left; border:0; pointer-events:none; display:block; }
+  .hero-text-tabs{ display:flex; gap:10px; margin:18px 0 16px; }
 
   /* Undo toast — replaces confirm() on delete. Sits inside the admin panel
      itself (not the site-wide .toast) so it's visible above the modal and
@@ -905,26 +1013,29 @@
   </div>
   <div class="hero-scrim" aria-hidden="true"></div>
   <div class="hero-inner">
-    <h1 class="sr-only">Islem Zrelli</h1>
-    <div class="hero-kicker" id="heroLocationLine">
-      <p class="hero-place">Gabès, Tunisia</p>
-      <p class="hero-count"><span id="heroPhotoCount">14</span> stories of documentary photography</p>
-    </div>
-    <p class="by-line">By</p>
-    <div class="signature-wrap" aria-hidden="true">
-      <svg class="signature-svg" id="signatureSvg" viewBox="0 0 700 160" preserveAspectRatio="xMidYMid meet">
-        <text id="signatureText" x="50%" y="62%" text-anchor="middle" dominant-baseline="middle">Islem Zrelli</text>
+    <h1 class="signature-wrap">
+      <svg class="signature-svg" id="signatureSvgA" viewBox="0 0 700 160" preserveAspectRatio="xMidYMid meet">
+        <text id="signatureTextA" x="50%" y="62%" text-anchor="middle" dominant-baseline="middle">Islem Zrelli</text>
       </svg>
-    </div>
-    <p class="hero-role">Activist &middot; Photographer &middot; Filmmaker</p>
+    </h1>
+    <p class="hero-role" id="heroRoleLine">Activist &middot; Photographer &middot; Filmmaker</p>
+    <p class="hero-extra-line hero-extra-1" id="heroAExtra1" style="display:none;"></p>
+    <p class="hero-extra-line hero-extra-2" id="heroAExtra2" style="display:none;"></p>
     <button class="enter" id="enterBtn" aria-label="Enter gallery">
-      Enter Gallery
+      <span id="enterBtnLabel">Enter Gallery</span>
       <span class="arrow-line" aria-hidden="true"></span>
       <svg class="arrow-chevron" viewBox="0 0 20 11" aria-hidden="true"><path d="M1 1l9 9 9-9"/></svg>
     </button>
   </div>
+  <!-- Same circular icon badges as Hero B's #heroContact (see
+       renderHeroContact() in the JS) — nested directly inside <header>,
+       not .hero-inner, so it gets its own bottom-anchored position and
+       independent fade-in delay instead of being swept into the
+       staggered .hero-inner > * reveal. -->
+  <div class="hero-contact" id="heroContactA" aria-label="Contact and social links"></div>
   <span class="hero-mark" id="izMark" aria-hidden="true" style="pointer-events:auto;">I. Z.</span>
-  <script>
+</header>
+<script>
   // ================= HIDDEN ADMIN GESTURE — setupIZAdminTrigger =================
   // Lives in its own tiny, standalone script — separate from the large app
   // script near the end of the page — for two reasons:
@@ -1050,11 +1161,53 @@
       });
     }
   })();
-  </script>
+</script>
+
+<!-- "Islem Zrelli" mini-story: 3-4 photos of Islem himself, same photo/
+     title/story/like/share template as every other scene, sitting between
+     the two hero screens instead of a conventional About page. Populated
+     once by renderIntroStory() (see the JS below) from whichever photos
+     the admin has assigned to the hidden "Islem Zrelli" category — never
+     rebuilt by renderScenes() the way #scenesTrack is on every category
+     switch, since this has nothing to do with which category is active. -->
+<div id="introStory"></div>
+
+<!-- "Hero B" — a second hero-styled full screen (same visual treatment as
+     #hero above: backdrop, scrim, staggered fade-in) acting as a title
+     page for the body of work itself: location, live story count, the
+     language switcher's other on-ramp, and the "By [signature]" byline
+     that used to live on the landing hero — moved here so the very first
+     screen can stay a clean, minimal title card. Its backdrop image is set
+     from the admin's Landing Page tab (about.work_title_image_url,
+     defaulting to the same image as the landing hero — see
+     renderHeroWorkBackdrop()). -->
+<header class="hero hero-work" id="heroWork">
+  <div class="hero-backdrop" id="heroWorkBackdrop" aria-hidden="true">
+    <img id="heroWorkBackdropImg" alt="" decoding="async">
+  </div>
+  <div class="hero-scrim" aria-hidden="true"></div>
+  <div class="hero-inner">
+    <div class="hero-kicker" id="heroLocationLine">
+      <p class="hero-work-place" id="heroWorkPlace">Gabès, Tunisia</p>
+      <p class="hero-count"><span id="heroPhotoCount">14</span> stories of documentary photography</p>
+    </div>
+    <p class="hero-credit" id="heroCreditLine">By Islem Zrelli</p>
+    <p class="hero-extra-line hero-extra-1" id="heroBExtra1" style="display:none;"></p>
+    <p class="hero-extra-line hero-extra-2" id="heroBExtra2" style="display:none;"></p>
+  </div>
+  <!-- Nested inside .hero-work (not a sibling) so its reveal animation
+       (.hero.ready .hero-contact.has-content — see the CSS) actually
+       fires: that selector needs an ancestor with both "hero" and "ready"
+       classes, which only a hero header itself ever gets (see
+       setupHeroWorkReveal()). Contact/social links live on this second
+       screen rather than the landing hero so Hero A can stay a clean,
+       minimal title card. -->
   <div class="hero-contact" id="heroContact" aria-label="Contact and social links"></div>
 </header>
+
 <div id="scenesTrack"></div>
 </main>
+
 
 <div class="toast" id="toast"></div>
 
@@ -1091,6 +1244,7 @@
       <button class="admin-tab" data-tab="reorder">Reorder</button>
       <button class="admin-tab" data-tab="landing">Landing Page</button>
       <button class="admin-tab" data-tab="watermark">Watermark</button>
+      <button class="admin-tab" data-tab="storage">Storage</button>
       <button class="admin-tab" data-tab="about">About</button>
     </div>
     <div class="admin-stats" id="adminStats"></div>
@@ -1277,16 +1431,22 @@
 
      ================================================================================
 
-     PRIVATE ORIGINALS BUCKET — one-time setup, required before uploading
-     will work. Every photo upload now stores the untouched master file
-     here FIRST, in a bucket the public site can never read back, before a
-     resized-and-watermarked copy is generated and uploaded to the public
-     `photos` bucket. Without this bucket, uploads fail (on purpose — see
-     uploadFile below) rather than silently publishing with no backup.
-
-     Supabase dashboard -> Storage -> New bucket -> name it exactly
-     "photos-originals" -> leave "Public bucket" UNCHECKED. Its access
-     policies are set by the ADMIN-ONLY RLS block above.
+     PRIVATE ORIGINALS BUCKET — no longer required. Photo uploads used to
+     store the untouched, full-resolution master file here before this was
+     removed: with 150+ photos, that full-resolution copy — routinely
+     several MB to tens of MB each, since it was never resized or
+     recompressed like the public copy is — was the entire cause of a real
+     Supabase storage-quota overage despite the visible site needing barely
+     any space at all (see uploadFile's own comment). Uploads no longer
+     write anything here.
+     If you already created this bucket and it has old files in it from
+     before this change, the admin "Storage" tab's scanner still lists and
+     lets you bulk-delete them (nothing on the site reads from this bucket
+     for anything, so clearing it out entirely is always safe) — that
+     reclaims real space right away, on top of no new files accumulating.
+     The bucket and its RLS policies above are otherwise harmless to leave
+     in place unused, or you can delete the bucket entirely from the
+     Supabase dashboard if you're confident you'll never want it again.
 
      ================================================================================
 
@@ -1315,6 +1475,12 @@
   alter table photos add column if not exists watermark_x_offset int;
   alter table photos add column if not exists watermark_y_offset int;
   alter table photos add column if not exists watermark_scale numeric;
+
+  -- "All" nav tab visibility. Lives here (not the `categories` table)
+  -- because "All" isn't a real category row — see navCategoryList()'s own
+  -- comment — it's a synthetic system tab, so its one on/off switch is
+  -- just a plain site-wide setting like the watermark fields above.
+  alter table site_settings add column if not exists hide_all_category boolean default false;
 
   -- (RLS for site_settings is set in the ADMIN-ONLY RLS block above.)
 
@@ -1420,6 +1586,81 @@
 
   -- (RLS: rides on the existing about table policies above.)
 
+     ================================================================================
+
+     "HERO B" / WORK TITLE SCREEN — run this once before using the admin
+     Landing Page tab's second image picker. The public site now has TWO
+     hero-styled full-screen beats before the gallery starts: the landing
+     hero (name + role + Enter Gallery — unchanged, still hero_image_url/
+     hero_crop above), then a short personal photo story (see "ABOUT ISLEM"
+     STORY SECTION below), then this second screen (location + story count +
+     language switcher + signature) right before the actual work begins.
+     Until you run this, that second screen falls back to the SAME image as
+     the landing hero.
+
+  alter table about add column if not exists work_title_image_url text;
+  alter table about add column if not exists work_title_crop jsonb default '{"scale":1,"x":50,"y":50}'::jsonb;
+  -- Same shape/meaning as hero_image_url/hero_crop above, just a second,
+  -- independent image+crop pair for the second hero screen specifically.
+
+  -- (RLS: rides on the existing about table policies above — no new
+  -- policy needed, these are just more columns on the same row.)
+
+     ================================================================================
+
+     "ABOUT ISLEM" STORY SECTION — no schema change needed; this is a
+     convention on top of the categories feature above, not a new table.
+     To set it up: in the admin Categories tab, create a category named
+     EXACTLY "Islem Zrelli" (any letter case is fine — it's matched by its
+     auto-generated slug, "islem-zrelli"), use the existing Hide/Show toggle
+     to hide it (so it never appears in the public nav bar or the
+     "Continue Exploring" chain), then use "Assign Photos" to pick the 3-4
+     photos of Islem himself, and give each one a title/story through the
+     normal photo editor exactly as with any other photo. Those photos then
+     render, in that category's own drag-reorder order, as their own short
+     scrollable story between the two hero screens above — same photo/
+     title/story/like/share template as the rest of the site. They're
+     deliberately excluded from the "All" tab and from the landing page's
+     total story count (see galleryPhotos() below) — they're an
+     introduction, not one of the documentary stories being counted.
+
+     ================================================================================
+
+     HERO TEXT CONTROL — run this once before using the admin Landing
+     Page tab's new "Hero A Text" / "Hero B Text" sections. Until you run
+     it, both heroes keep showing their current hardcoded text exactly as
+     before — nothing changes on the public site pre-migration, the admin
+     fields just have nowhere to save to yet.
+
+  alter table about add column if not exists hero_a_text jsonb;
+  -- Shape: { name, name_scale, name_y, role, role_scale, role_y, button_label,
+  --          extra1:{enabled,text,scale,y}, extra2:{...}, scrim_opacity }
+  -- name/role/button_label/extraN.text are the actual words shown.
+  -- *_scale (default 1) multiplies that line's existing responsive
+  -- clamp()/rem font-size — see applyHeroTextConfig() — so "bigger" stays
+  -- proportionally bigger on a phone AND a desktop, never a fixed px size
+  -- that's huge on one and tiny on the other.
+  -- *_y (default 0, px) nudges that line up/down; the admin UI clamps the
+  -- slider to a small safe range so text can't be pushed into the corner
+  -- mark, language switcher, or contact badges on any screen size.
+  -- scrim_opacity (default 1 = current design) multiplies the dark
+  -- gradient behind the text, so a bright photo can get more overlay
+  -- without touching the photo itself.
+  -- A null/missing row (or a missing key within it) falls back to
+  -- exactly the current hardcoded value for that field — see the
+  -- defaults object in applyHeroTextConfig().
+
+  alter table about add column if not exists hero_b_text jsonb;
+  -- Same idea, for Hero B: { location, location_scale, location_y,
+  -- credit, credit_scale, credit_y, extra1:{...}, extra2:{...},
+  -- scrim_opacity }. Hero B's own story-count line (the dynamic "N
+  -- stories of documentary photography") is intentionally NOT part of
+  -- this config — it's computed from the real photo count, not
+  -- admin-authored text, so it stays exactly as it already worked.
+
+  -- (RLS: rides on the existing about table policies above — no new
+  -- policy needed, these are just more columns on the same row.)
+
   ================================================================================ */
 
   // Storage adapter picks localStorage (persists across browser restarts)
@@ -1462,6 +1703,39 @@
   }).catch(function(){});
   var BUCKET = "photos";                    // public — watermarked copies only
   var ORIGINALS_BUCKET = "photos-originals"; // private — untouched masters, never read back by the app
+
+  // Reverses getPublicUrl(): given a photo's full public URL, returns just
+  // the storage path inside `bucket` (what storage.remove() needs), or
+  // null if the URL doesn't look like it belongs to that bucket at all
+  // (e.g. it's already null/empty, or was hand-entered oddly) — callers
+  // treat null as "nothing we can safely delete," never as "delete
+  // everything," since a wrong guess here would delete the wrong file.
+  function storagePathFromPublicUrl(url, bucket){
+    if(!url) return null;
+    var marker = '/object/public/' + bucket + '/';
+    var idx = url.indexOf(marker);
+    if(idx === -1) return null;
+    var path = url.slice(idx + marker.length).split('?')[0];
+    try{ return decodeURIComponent(path); } catch(e){ return path; }
+  }
+  // Deletes the public watermarked copy behind one or more photos'
+  // image_url — used wherever a photo record stops pointing at a file
+  // (deleted outright, or its image replaced with a new upload) so that
+  // file doesn't sit in storage forever, unreferenced, still being billed.
+  // Deliberately best-effort: storage cleanup failing (network hiccup,
+  // already gone, etc.) never blocks or rolls back the database change
+  // that's the actual point of the action — see each call site's own
+  // try/catch. Does NOT touch the private original in `photos-originals`;
+  // that file's path was never saved anywhere on the photo record to
+  // begin with (see uploadFile()'s own comment), so it can't be targeted
+  // individually — it's exactly what the "Find Orphaned Storage Files"
+  // admin tool cleans up instead, retroactively, by listing the bucket
+  // rather than needing a stored path per photo.
+  async function removeStorageFilesForUrls(urls){
+    var paths = urls.map(function(u){ return storagePathFromPublicUrl(u, BUCKET); }).filter(Boolean);
+    if(!paths.length) return;
+    try{ await sb.storage.from(BUCKET).remove(paths); } catch(e){ /* best-effort — see comment above */ }
+  }
 
   /* SITE_URL: used for canonical links, Open Graph/Twitter urls, clean per-photo
      URLs, and the admin sitemap export. No trailing slash. */
@@ -1588,12 +1862,30 @@
         currentLang = code;
         setLang(code);
         renderLangSwitch();
+        renderIntroStory();
         renderScenes();
       });
     });
   }
 
   /* ================= WATERMARK ================= */
+  // Shared by applyHeroTextConfig() (public renderer) and the Landing
+  // Page admin tab, so the two can never drift out of sync — an
+  // unconfigured/pre-migration site renders using exactly these values,
+  // which ARE the site's original hardcoded hero copy.
+  var HERO_A_TEXT_DEFAULTS = { name:'Islem Zrelli', name_scale:1, name_y:0, role:'Activist · Photographer · Filmmaker', role_scale:1, role_y:0, button_label:'Enter Gallery', extra1:{enabled:false,text:'',scale:1,y:0}, extra2:{enabled:false,text:'',scale:1,y:0}, scrim_opacity:1 };
+  var HERO_B_TEXT_DEFAULTS = { location:'Gabès, Tunisia', location_scale:1, location_y:0, credit:'By Islem Zrelli', credit_scale:1, credit_y:0, extra1:{enabled:false,text:'',scale:1,y:0}, extra2:{enabled:false,text:'',scale:1,y:0}, scrim_opacity:1 };
+  function mergeHeroTextConfig(defaults, raw){
+    raw = raw || {};
+    var merged = Object.assign({}, defaults, raw);
+    merged.extra1 = Object.assign({}, defaults.extra1, raw.extra1 || {});
+    merged.extra2 = Object.assign({}, defaults.extra2, raw.extra2 || {});
+    return merged;
+  }
+
+  // This object has grown beyond just watermark config (see
+  // hide_all_category below) — it mirrors the `site_settings` table as a
+  // whole, one row of misc site-wide toggles, not only watermark fields.
   var DEFAULT_WATERMARK = {
     watermark_enabled: true,
     watermark_text: 'Islem Zrelli',
@@ -1601,7 +1893,8 @@
     watermark_position: 'bottom-right',
     watermark_x_offset: 20,
     watermark_y_offset: 20,
-    watermark_scale: 1
+    watermark_scale: 1,
+    hide_all_category: false
   };
   var settings = Object.assign({}, DEFAULT_WATERMARK);
 
@@ -1684,11 +1977,15 @@
   // system pseudo-categories — "Favorite" is backed by photos.is_favorite,
   // "All" is backed by every published photo — neither is a `categories`
   // row, followed by every visible real category in admin-defined order.
+  // "All" can be turned off entirely via the Categories tab's own toggle
+  // (settings.hide_all_category, stored in site_settings — see the SQL
+  // note above) — unlike a real category, there's no `is_visible` row to
+  // check for it, so this is a separate, explicit check.
   function navCategoryList(){
     var list = [
-      { id:'favorite', name:'Favorite', slug:'favorite', system:true },
-      { id:'all', name:'All', slug:'all', system:true }
+      { id:'favorite', name:'Favorite', slug:'favorite', system:true }
     ];
+    if(!settings.hide_all_category) list.push({ id:'all', name:'All', slug:'all', system:true });
     categories.forEach(function(c){ if(c.is_visible !== false) list.push(c); });
     return list;
   }
@@ -1719,8 +2016,12 @@
       // is already the full published set (see loadPublicData's query),
       // and the existing global display_order IS the canonical order per
       // the task's requirement, so this is just that same order applied —
-      // no duplicate ordering system, no per-photo "All" record.
-      return photos.slice().sort(function(a, b){ return (a.display_order || 0) - (b.display_order || 0); });
+      // no duplicate ordering system, no per-photo "All" record. Routed
+      // through galleryPhotos() rather than `photos` directly so the
+      // hidden "Islem Zrelli" intro photos (see the SQL comment above)
+      // never show up here either — they're an introduction to the
+      // photographer, not one of the documentary stories being counted.
+      return galleryPhotos().slice().sort(function(a, b){ return (a.display_order || 0) - (b.display_order || 0); });
     }
     var cat = categories.find(function(c){ return c.slug === slug; });
     if(!cat) return photos.slice();
@@ -1730,6 +2031,26 @@
     });
     var list = photos.filter(function(p){ return (photoCategoryMap[p.id] || []).indexOf(cat.id) !== -1; });
     return sortByScopeOrder(list, function(p){ return orderMap[String(p.id)]; });
+  }
+
+  // The "Islem Zrelli" hidden category (see the SQL comment above) — looked
+  // up by its slug rather than assumed to exist, since a fresh site won't
+  // have created it yet. Returns null until the admin sets it up; every
+  // caller below treats that as "no intro story configured" instead of
+  // erroring or falling back to something unintended.
+  function aboutIslemCategory(){
+    return categories.find(function(c){ return c.slug === 'islem-zrelli'; }) || null;
+  }
+
+  // `photos` with the Islem Zrelli intro photos (if any) removed — the
+  // single shared filter for anywhere the site counts or lists "every
+  // photograph": the landing page's story count and the "All" tab above.
+  // A photo assigned to Islem Zrelli is deliberately left out of both, no
+  // matter what else it's also assigned to.
+  function galleryPhotos(){
+    var aboutCat = aboutIslemCategory();
+    if(!aboutCat) return photos;
+    return photos.filter(function(p){ return (photoCategoryMap[p.id] || []).indexOf(aboutCat.id) === -1; });
   }
 
   function categorySlugFromPath(path){
@@ -1915,6 +2236,7 @@
 
   var scroller = document.getElementById('scroller');
   var heroEl = document.getElementById('hero');
+  var heroWorkEl = document.getElementById('heroWork');
   var scrollNav = document.getElementById('scrollNav');
   var scrollUpBtn = document.getElementById('scrollUpBtn');
   var scrollDownBtn = document.getElementById('scrollDownBtn');
@@ -1924,11 +2246,21 @@
   var heroLocationLineEl = document.getElementById('heroLocationLine');
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Draws the hero signature like it's being written, then lets the ink
-  // "settle" into a solid fill. Runs once per page load — the landing hero
-  // is only ever seen fresh (there's no client-side route change back to
-  // it), so "every time someone enters the site" and "on load" are the
-  // same event here.
+  // Draws Hero A's signature like it's being written, then lets the ink
+  // "settle" into a solid fill. Takes the target <text> element's id
+  // (rather than being hard-coded to one) mainly so this stays reusable —
+  // Hero B carried its own copy of this same treatment for a while, but
+  // on review that made the two heroes redundant (the same dramatic name
+  // reveal twice in a row), so Hero B dropped back to a quiet "By Islem
+  // Zrelli" text credit instead. This function only has one caller now,
+  // but keeping it parameterized costs nothing and means resurrecting a
+  // second animated signature later is a one-line change, not a rewrite.
+  //
+  // Triggered from animateHeroEntrance() below the moment Hero A itself
+  // reveals — not hard-coded to fire unconditionally on module load —
+  // since a hero further down the page (Hero B, previously) reached only
+  // after scrolling would otherwise finish its animation off-screen
+  // before anyone scrolled far enough to see it.
   //
   // This animates a real <text> element (correct, legible letterforms) —
   // not a hand-authored calligraphy path — so there's nothing to draw
@@ -1938,8 +2270,8 @@
   // perimeter at this font size within the SVG's fixed 700-wide viewBox —
   // since the viewBox coordinate space doesn't change with screen size,
   // one constant works everywhere.
-  (function animateSignature(){
-    var text = document.getElementById('signatureText');
+  function animateSignature(textId){
+    var text = document.getElementById(textId);
     if(!text) return;
     if(reduceMotion) return; // CSS already shows it fully filled, no JS needed
     var DASH = 4000;
@@ -1956,7 +2288,7 @@
       });
     });
     setTimeout(function(){ text.classList.add('filled'); }, 1150);
-  })();
+  }
 
   // Early, synchronous signal for whether this load might land somewhere
   // other than the hero — an explicit /work/ or /category/ URL. (This used
@@ -2000,6 +2332,7 @@
     requestAnimationFrame(function(){
       requestAnimationFrame(function(){
         hero.classList.add('ready');
+        animateSignature('signatureTextA');
       });
     });
   }
@@ -2308,6 +2641,31 @@
     img.src = url;
   }
 
+  // Same idea as renderHeroBackdrop() above, for the second ("Hero B" /
+  // work-title) screen — set from the admin's Landing Page tab's own
+  // "Work Title Backdrop" picker (about.work_title_image_url). Falls back
+  // to the landing hero's own image/crop when nothing's been picked yet,
+  // so this screen never renders blank on a site that hasn't set it up —
+  // see the "HERO B" SQL comment near the top of this file.
+  function renderHeroWorkBackdrop(){
+    var backdrop = document.getElementById('heroWorkBackdrop');
+    var img = document.getElementById('heroWorkBackdropImg');
+    if(!backdrop || !img) return;
+    var url = about.work_title_image_url || about.hero_image_url || (photos.find(function(p){ return p.featured; }) || photos[0] || {}).image_url;
+    if(!url){
+      backdrop.style.display = 'none';
+      return;
+    }
+    backdrop.style.display = '';
+    var crop = Object.assign({ scale:1, x:50, y:50 }, about.work_title_crop || about.hero_crop || {});
+    img.style.objectPosition = crop.x + '% ' + crop.y + '%';
+    img.style.transform = crop.scale && crop.scale !== 1 ? 'scale(' + crop.scale + ')' : '';
+    function reveal(){ backdrop.classList.add('in-view'); }
+    if(img.complete && img.naturalWidth && img.src === url){ requestAnimationFrame(reveal); }
+    else { backdrop.classList.remove('in-view'); img.addEventListener('load', reveal, { once:true }); }
+    img.src = url;
+  }
+
   // Reproduces the admin's chosen landing-image composition (see the
   // "Position & Crop" tool in the Landing Page admin tab) on the actual
   // public backdrop. object-position is a PERCENTAGE of the image, so the
@@ -2320,43 +2678,60 @@
     img.style.transform = crop.scale && crop.scale !== 1 ? 'scale(' + crop.scale + ')' : '';
   }
 
-  // Quiet contact/social strip near the bottom of the hero. Driven entirely
-  // by the `about` row loaded in loadPublicData — nothing here is hard-coded,
-  // and each link only appears once its URL/email/number is actually set in
-  // the About admin tab. Two short rows: social platforms, then direct
-  // contact — matching the "Instagram · Facebook · TikTok / Email · WhatsApp"
-  // layout, with any missing platform simply omitted rather than left blank.
-  function renderHeroContact(){
-    var el = document.getElementById('heroContact');
+  // Circular icon badges for the social + direct-contact row — see
+  // SOCIAL_ICON_DATA and renderHeroContact() below. Driven entirely by
+  // the `about` row loaded in loadPublicData — nothing here is
+  // hard-coded, and each badge only appears once its URL/email/number is
+  // actually set in the About admin tab.
+  //
+  // Shown on BOTH heroes now (#heroContactA on the landing hero, and
+  // #heroContact on Hero B) — this used to be Hero-B-only, since as
+  // full text links the same row twice in a row across two consecutive
+  // full-screen scroll stops read as repetitive and worked against Hero
+  // A's "clean, minimal title card" brief. Compact circular icons are a
+  // much lighter touch than a row of uppercase text links, so that
+  // concern doesn't really apply here — worth revisiting only if the
+  // icon row itself ever starts feeling heavy on Hero A.
+  var SOCIAL_ICON_DATA = {
+    email: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFgAAABYCAYAAABxlTA0AAAFWElEQVR4nO2bvY/cRBiHf+9+3AaOiIIgUYSGIKRQIErSkgRQkJIrKOBPQCISRAiQEPRAQ8RfQEVHPshFEL6EREFHQRMECA4B4qOgAe729nZ/FPNObs7n887Yu2t79T6S5fPZHs88fv2Ox14DhmEYhmEYhmEYhmEYhmEYhmEYhmHMEymzE8lu2X1bDEVkXHcljAzRUUiyIyITkscBvA5gC0AnpYyWMgHQBbAJ4BUAfwOAiDBm517KkTQ1fKfTa0nVbD9Pw8ntAKBOU4mKPpIiIiQpAEQj+TkA7wAYYjkjeQLXriGAsyLyGcmuz8PeSaUjqFCQvJvkS/p3l2Rf/36ejh2SEy4PY51vkXxM27qi88MkX6bzUC2ouCv4dj3oRV3ucXklF8ntk/yC5De63JmV4FWSv+qB38yR/IKuG7HdkovkrpD8QNffmLXgO0j+HlTgrSWUPE3u9WC7z+ch+A89wFDneZLbmi5i5W7qfK6CJ3RRSi6H5Fi523RtIhcgmIyT3PR0ESvXt3WhgsMDt1Gyl7vJQC5JYb5csgbBpLt0yHZJzo1c7pe7ndmvFsFku3JyWblkjYLJdkhO6dDyqFUwWSy57vvk2Mgd5ezrqV1wWMEmRXKVtBDSCMFkXCQvSvIsItfTGMFhheuM5CK5fcZHrqdRgsl6JacOImJonOCwAYvs+HIHERXlkg0VTO4fjOQ9tJ+V5Kq3YkU0VnDYoDcKJFdNFwfl3A7JAcn1TF1SabRg0jWcJF/VcnskezOSnCe3T5VA8rKuH+btHEmy4GpnII0xgAGAHwFcpzt5BJxoEXkbwAW4V+QTvy4S/4JyC+4F5Q26q4MARI/1LoD/AKzo9vXD2UWwP/M/kbxfy+wGx+mwfE7OjdxMO7o6f1y3mwT7lWlHo1JEntyBzo+RPF9Bcp5cX/YhkheCZd/RVZHcOMG+Qhskj2UEHCV5U9f7ji/lPnnaCO2arr9Kl4uFeyUPM+WktKcRgqfJ/TYQRBYPRsbBNAnKjn2Hth6UmY1kX35Km2oXXJQWQrl+u5jBSJZ/GDeI8PN1BhFeUnIjBMfKzY6i8iT7zulhkidIPqLTiaDsW5c/Dx5E+OV17k8XTzBecu2Cw7SQIpeZ/4eSVwrqN2D8I0df9jXm5+QYybUKjs2508b/eyRH1DHlqVhRJMdIThac9PPVAsZwA4SfATwqIj+QXBGRIcmjAD4F8IBuN+2YPd3uRZJHALwHYBvY85NR0elOAOcBnASwA6C/r7S99HW7MwAuA1gDMNK6fkTyHIArcAMiP3iZH4yL4NQOLZaU26fU+9myHd/Ch8o+cjcAnBKR70kOciJ3R7dLoaPlTwqmsU6p7egBGMFF8vtwkX0rkgGcg/tdsKDisLqK4DAtTJNbNhV1tY4HTV2knzhPH07ykwAuaR2zkkd6nNKSywrO5tx5yF0EXrLPyVnJZ7H7C/5SkssI9pf7BoCT2qG1Ua4n2/HlRXJpySmC/ePFPvJz7r1on1xPmJMvYX9OXoOT3EXaY9RowQJ3qyQ4WO4naKdcTzYnh5I/hJPsHczmg0Tu3qYdIvkvyV9I3qf/KzOIaANFg5HTdLduX+ry1AAt/EqGu59v3QUXoc+IyE2SfREZkbwHLi08CPc2oY2Rm8cIwG0ArgJYUwe+zU8BeBbAKWD6B4mx38mtAlgVkT/p3qGNATwEJ/1I+Xa0gq/g0sNfADoiskPXmf8mIlM7vaTvvPSSoJ7RMwCOw73n6iEx+beEMYDDAD4Wka99SogRmwyrfnS3RKS4KC1Nz+Yi30rXyWQuUWsYhmEYhmEYhmEYhmEYhmEYhmEYRmX+B6t73IxSXv7GAAAAAElFTkSuQmCC',
+    facebook: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFgAAABYCAYAAABxlTA0AAAD6UlEQVR4nO2cP4skRRiHn3dmF0EXMfAS4SIPFVQ4EAxMFREzE7+A8SV3kammpiZ+Bb+CmSAoomYGh2CmIHdy3nri3c78DKpeu+9sd6d7pqprbt4HmqZnu+vP09X1r2sbgiAIgiAIggaxuROwLZI2zoOZqWRaBuOsHeE2ZJlLPwRkZusZk3QheyFY0gIwM1sN/O1kRFB/1i7FRzUjm4KkpYuV9CzwFvA68CrwBPDiBsGsSCX/I+DTfpilaVawJDMzmdlK0lXgOvAOcGmLYJ/L+2pPbpOCc5UgSUvgE+AaXd27ItW/LmmxQZBnpLze33FSL6Q5wbkhE0nc58B7wJokaUknegzW26qyyd2vRpa7IN14l/uAJOaIPWmU+zQlGFjkxudjOrnH7KFYpxnBkha5QbsC3KCrN/eaZgTTldIP6cTubcl1mhCcu2QrSZeA90mN3JTGrDlaeQSXpCrhXeCEbmAwBuVtaOh8lvfVh9WtCHbezvuxw9k16Wn0XsijeD6fnJiuycwuOHfNVnlw8Ur+eUzV5X1mAd8DNwfO8Sfi2941h0F/ulHSTSVW2oyVpLWk7yS9Nmc+miWXXCRdlnSaxa03FHyWz30zh3EkaZn3Q1v1Rn32KqLHU3mDzbpn3tP4A/ghy1vNMal+Hk100zJrtqgbW514b0nwY0kILkwILkwILkwILszsgnut/za9gHUOq6kuGlTsB+f53rWkz4A3eHj+QKQ3xGOmJ/3cE+ArSee9Jfa4vjazDzwtozMxgZoDDRfyAvDyDsNdAC9teO6XvWseO8HOX6TMDU1JTq2yLpLlb0d+nRj+ZOYQvKCb/dpVG3BROMt8js+0VaurZ2/kKnOrdoSHIthI1cTv+ThK8A7xqugB8HPvtyocgmDnPjO8yTgEwS71JzP7zRcV1op8jl6EHtn6TF0HcZ6woXiqMYdgX2O2y7jPuzHe1/4x7xekPngV5hB8h9Sa+/DVWQJPTwhPpNdG/zfY8AHNL/m46mqh6kuT8pL/Y7o1vj5sfR74ZkSa/Pq7wFXSTfN5jaHz/jaze1smfzTVS7CZnQ79Lun2xCAF3DKzO9NTVY7qgvXff7vyEny8RbDHOdyhEvwvc0xnzlGCH8qkUr9JkrbJvIfR3JzwIfSDZyUEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEFyYEF6alT8pAWss7dvlqtcXUU2hJsH91dSzP0PAnGFsQ7KshT4EvJlx/jxk+vBw0QlOPltInxUdf1uoXp4IgCIIgCILgUPkHj2aWRLVMH0gAAAAASUVORK5CYII=',
+    instagram: 'data:image/png;base64,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',
+    tiktok: 'data:image/png;base64,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',
+    whatsapp: 'data:image/png;base64,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'
+  };
+
+  // Renders into whichever hero element id is passed in — used for both
+  // #heroContactA and #heroContact, so the two can never drift out of
+  // sync. Each badge is a real <a> (not a button), so ctrl/cmd-click,
+  // "open in new tab", and screen readers all work like a normal link —
+  // the icon is decorative (aria-hidden) and the accessible name comes
+  // from the platform label via aria-label, since there's no visible text.
+  function renderHeroContact(elId){
+    var el = document.getElementById(elId || 'heroContact');
     if(!el) return;
 
-    var socialLinks = [
-      about.instagram_url ? { label:'Instagram', href:about.instagram_url } : null,
-      about.facebook_url  ? { label:'Facebook',  href:about.facebook_url }  : null,
-      about.tiktok_url    ? { label:'TikTok',    href:about.tiktok_url }    : null
+    var links = [
+      about.instagram_url ? { label:'Instagram', href:about.instagram_url, icon:'instagram', external:true } : null,
+      about.facebook_url  ? { label:'Facebook',  href:about.facebook_url,  icon:'facebook',  external:true } : null,
+      about.tiktok_url    ? { label:'TikTok',     href:about.tiktok_url,    icon:'tiktok',    external:true } : null,
+      about.contact_email ? { label:'Email',      href:'mailto:'+about.contact_email, icon:'email', external:false } : null,
+      about.whatsapp_number ? (function(){
+        var digits = String(about.whatsapp_number).replace(/[^0-9]/g, '');
+        return digits ? { label:'WhatsApp', href:'https://wa.me/'+digits, icon:'whatsapp', external:true } : null;
+      })() : null
     ].filter(Boolean);
 
-    var directLinks = [];
-    if(about.contact_email){
-      directLinks.push({ label:'Email', href:'mailto:'+about.contact_email });
-    }
-    if(about.whatsapp_number){
-      var digits = String(about.whatsapp_number).replace(/[^0-9]/g, '');
-      if(digits) directLinks.push({ label:'WhatsApp', href:'https://wa.me/'+digits });
-    }
+    if(!links.length){ el.innerHTML = ''; el.classList.remove('has-content'); return; }
 
-    function renderRow(links){
-      if(!links.length) return '';
-      return '<div class="hero-contact-row">'+links.map(function(l, i){
-        var external = l.href.indexOf('mailto:') !== 0;
-        return (i > 0 ? '<span class="dot" aria-hidden="true">&middot;</span>' : '')+
-          '<a href="'+escapeHtml(l.href)+'"'+(external ? ' target="_blank" rel="noopener noreferrer"' : '')+'>'+escapeHtml(l.label)+'</a>';
-      }).join('')+'</div>';
-    }
-
-    el.innerHTML = renderRow(socialLinks) + renderRow(directLinks);
-    el.classList.toggle('has-content', socialLinks.length > 0 || directLinks.length > 0);
+    el.innerHTML = '<div class="social-badges">'+links.map(function(l){
+      return '<a class="social-badge" href="'+escapeHtml(l.href)+'" aria-label="'+escapeHtml(l.label)+'"'+
+        (l.external ? ' target="_blank" rel="noopener noreferrer"' : '')+'>'+
+        '<img src="'+SOCIAL_ICON_DATA[l.icon]+'" alt="" aria-hidden="true">'+
+      '</a>';
+    }).join('')+'</div>';
+    el.classList.add('has-content');
   }
+
 
   // The landing-page count is the total number of published photographs
   // across the whole gallery (not the currently filtered category) —
@@ -2371,7 +2746,89 @@
   // in place once the fetch completes, in the rare case it's changed.
   function updateHeroPhotoCount(){
     if(!heroPhotoCountEl) return;
-    heroPhotoCountEl.textContent = photos.length;
+    heroPhotoCountEl.textContent = galleryPhotos().length;
+  }
+
+  // Reads about.hero_a_text / about.hero_b_text (see the SQL comment
+  // "HERO TEXT CONTROL") and applies every admin-configurable hero
+  // string + size/position/overlay value to the live DOM. A missing
+  // column, a missing row, or a config that only sets some fields all
+  // fall back to exactly the site's original hardcoded text/appearance —
+  // the defaults objects below ARE that original copy, so an
+  // unconfigured site (or one that hasn't run the migration yet) renders
+  // pixel-identical to before this feature existed.
+  //
+  // *_scale multiplies the target line's existing responsive font-size
+  // (a clamp()/rem value already in the CSS — see .hero-role etc.), never
+  // replaces it with a fixed px size, so "bigger" stays proportionally
+  // bigger on every screen. *_y is a small px nudge, clamped defensively
+  // here (the admin UI's sliders already clamp it too) to a safe range
+  // that can't push text into the corner mark / language switcher /
+  // contact badges on any device.
+  function applyHeroTextConfig(){
+    function clampScale(n){ n = parseFloat(n); return isFinite(n) ? Math.max(0.6, Math.min(1.8, n)) : 1; }
+    function clampY(n){ n = parseFloat(n); return isFinite(n) ? Math.max(-30, Math.min(30, n)) : 0; }
+    function clampOpacity(n){ n = parseFloat(n); return isFinite(n) ? Math.max(0, Math.min(1, n)) : 1; }
+    function setExtraLine(id, cfg){
+      var el = document.getElementById(id);
+      if(!el) return;
+      var show = !!(cfg && cfg.enabled && cfg.text && cfg.text.trim());
+      el.style.display = show ? '' : 'none';
+      el.textContent = show ? cfg.text : '';
+    }
+
+    var a = mergeHeroTextConfig(HERO_A_TEXT_DEFAULTS, about.hero_a_text);
+    var b = mergeHeroTextConfig(HERO_B_TEXT_DEFAULTS, about.hero_b_text);
+
+    // ---- Hero A ----
+    var heroEl = document.getElementById('hero');
+    var sigText = document.getElementById('signatureTextA');
+    if(sigText && sigText.textContent !== a.name){
+      sigText.textContent = a.name;
+      // Only visibly matters if animateHeroEntrance() already fired with
+      // the old text (see animateSignature()'s own comment on timing) —
+      // otherwise this just draws the right name the first time, same as
+      // always. Restarting is what avoids the name silently swapping
+      // mid-animation, or after, on a site that has customized it.
+      if(typeof animateSignature === 'function') animateSignature('signatureTextA');
+    }
+    var roleLine = document.getElementById('heroRoleLine');
+    if(roleLine) roleLine.textContent = a.role;
+    var enterLabel = document.getElementById('enterBtnLabel');
+    if(enterLabel) enterLabel.textContent = a.button_label;
+    setExtraLine('heroAExtra1', a.extra1);
+    setExtraLine('heroAExtra2', a.extra2);
+    if(heroEl){
+      heroEl.style.setProperty('--sig-scale', clampScale(a.name_scale));
+      heroEl.style.setProperty('--sig-y', clampY(a.name_y) + 'px');
+      heroEl.style.setProperty('--role-scale', clampScale(a.role_scale));
+      heroEl.style.setProperty('--role-y', clampY(a.role_y) + 'px');
+      heroEl.style.setProperty('--extra1-scale', clampScale(a.extra1.scale));
+      heroEl.style.setProperty('--extra1-y', clampY(a.extra1.y) + 'px');
+      heroEl.style.setProperty('--extra2-scale', clampScale(a.extra2.scale));
+      heroEl.style.setProperty('--extra2-y', clampY(a.extra2.y) + 'px');
+      heroEl.style.setProperty('--scrim-opacity', clampOpacity(a.scrim_opacity));
+    }
+
+    // ---- Hero B ----
+    var heroWorkEl = document.getElementById('heroWork');
+    var placeEl = document.getElementById('heroWorkPlace');
+    if(placeEl) placeEl.textContent = b.location;
+    var creditEl = document.getElementById('heroCreditLine');
+    if(creditEl) creditEl.textContent = b.credit;
+    setExtraLine('heroBExtra1', b.extra1);
+    setExtraLine('heroBExtra2', b.extra2);
+    if(heroWorkEl){
+      heroWorkEl.style.setProperty('--place-scale', clampScale(b.location_scale));
+      heroWorkEl.style.setProperty('--place-y', clampY(b.location_y) + 'px');
+      heroWorkEl.style.setProperty('--credit-scale', clampScale(b.credit_scale));
+      heroWorkEl.style.setProperty('--credit-y', clampY(b.credit_y) + 'px');
+      heroWorkEl.style.setProperty('--extra1-scale', clampScale(b.extra1.scale));
+      heroWorkEl.style.setProperty('--extra1-y', clampY(b.extra1.y) + 'px');
+      heroWorkEl.style.setProperty('--extra2-scale', clampScale(b.extra2.scale));
+      heroWorkEl.style.setProperty('--extra2-y', clampY(b.extra2.y) + 'px');
+      heroWorkEl.style.setProperty('--scrim-opacity', clampOpacity(b.scrim_opacity));
+    }
   }
 
   // "Continue Exploring" chapter-break card, appended right after the
@@ -2403,6 +2860,79 @@
     '</section>';
   }
 
+  // The single per-photo scene template — full photo, scrim, title, story,
+  // like/share/edit actions. Shared by renderScenes() (the category
+  // gallery) and renderIntroStory() (the "Islem Zrelli" mini-story) below,
+  // so the two are guaranteed to stay visually identical rather than two
+  // copies quietly drifting apart. `eagerCount` controls how many of the
+  // first photos in THIS list get an eager `src` (vs. lazy `data-src`
+  // only, picked up by setupImageLazyLoading's IntersectionObserver) —
+  // defaults to 2, matching the gallery's original tuning; renderIntroStory
+  // passes its own full (small) list length, since all 3-4 intro photos
+  // sit near the very top of the page anyway.
+  function photoSceneHtml(s, i, total, eagerCount){
+    var eager = eagerCount == null ? 2 : eagerCount;
+    var num = String(i+1).padStart(2,'0');
+    var isLiked = !!liked[s.id];
+    var count = (s.likes || 0);
+    var trTitle = tText(s, 'title');
+    var trStory = tText(s, 'story');
+    var langDir = currentLang === 'ar' ? ' dir="rtl"' : '';
+    return ''+
+    '<section class="scene" id="scene-'+s.id+'" data-index="'+(i+1)+'" data-id="'+s.id+'" data-slug="'+escapeHtml(s._slug)+'" aria-label="'+escapeHtml(trTitle)+'">'+
+      '<div class="frame-img"><div'+wmFrameAttrs(s)+'><img '+(i<eager?'src="'+escapeHtml(s.image_url)+'" ':'')+'data-src="'+escapeHtml(s.image_url)+'" alt="'+escapeHtml(s.alt_text || s.title || 'Photograph by Islem Zrelli')+'" decoding="async"></div></div>'+
+      '<div class="scrim"></div>'+
+      '<div class="scene-content">'+
+        (trTitle ? '<h2'+langDir+'>'+escapeHtml(trTitle)+'</h2>' : '')+
+        '<p class="caption clamped" id="caption-'+s.id+'"'+langDir+'>'+escapeHtml(trStory)+'</p>'+
+        '<button type="button" class="read-more-btn" data-caption-id="caption-'+s.id+'">Read more</button>'+
+        '<div class="scene-rule"></div>'+
+        '<div class="scene-actions">'+
+          '<div class="actions-left">'+
+            '<button class="action-btn like-btn'+(isLiked?' liked':'')+'" data-id="'+s.id+'" aria-pressed="'+isLiked+'" aria-label="Like this photo">'+
+              svgHeart(isLiked)+'<span class="like-count">'+count.toLocaleString()+'</span>'+
+            '</button>'+
+            '<span class="action-divider" aria-hidden="true"></span>'+
+            '<button class="action-btn share-btn" data-id="'+s.id+'" data-title="'+escapeHtml(trTitle)+'" aria-label="Share this photo">'+
+              svgShare+'<span>Share</span>'+
+            '</button>'+
+            '<span class="action-divider admin-only" aria-hidden="true"></span>'+
+            '<button class="action-btn edit-btn admin-only" data-id="'+s.id+'" aria-label="Edit this photo (admin)">'+
+              svgEdit+'<span>Edit</span>'+
+            '</button>'+
+          '</div>'+
+          '<div class="frame-counter"><b>'+num+'</b> — '+String(total).padStart(2,'0')+'</div>'+
+        '</div>'+
+      '</div>'+
+    '</section>';
+  }
+
+  // Populates #introStory (the "Islem Zrelli" mini-story between the two
+  // hero screens) from the hidden "Islem Zrelli" category's photos, if the
+  // admin has set one up — see the SQL comment block near the top of this
+  // file for the one-time setup steps. Deliberately does NOT fall back to
+  // photosForCategory()'s own "category not found" behavior (which returns
+  // every photo) — no configured category should mean no intro story, not
+  // every photograph on the site rendered twice.
+  //
+  // Called once on initial load (before the first renderScenes(), so its
+  // .scene elements exist in the DOM in time for that call's own
+  // setupSceneBehavior() to pick them up — see navSlides() below for how
+  // they're woven into scroll navigation) and again on every language
+  // switch (so the intro story's title/story text stays in sync, the same
+  // way renderScenes() does for the gallery) — but never on category
+  // switches, since it has nothing to do with which category is active.
+  function renderIntroStory(){
+    var introEl = document.getElementById('introStory');
+    if(!introEl) return;
+    var aboutCat = aboutIslemCategory();
+    var list = aboutCat ? photosForCategory('islem-zrelli') : [];
+    if(!list.length){ introEl.innerHTML = ''; return; }
+    var html = '';
+    list.forEach(function(s, i){ html += photoSceneHtml(s, i, list.length, list.length); });
+    introEl.innerHTML = html;
+  }
+
   function renderScenes(){
     var list = activePhotos;
     var total = list.length;
@@ -2416,39 +2946,7 @@
 
     var html = '';
     list.forEach(function(s, i){
-      var num = String(i+1).padStart(2,'0');
-      var isLiked = !!liked[s.id];
-      var count = (s.likes || 0);
-      var trTitle = tText(s, 'title');
-      var trStory = tText(s, 'story');
-      var langDir = currentLang === 'ar' ? ' dir="rtl"' : '';
-      html += ''+
-      '<section class="scene" id="scene-'+s.id+'" data-index="'+(i+1)+'" data-id="'+s.id+'" data-slug="'+escapeHtml(s._slug)+'" aria-label="'+escapeHtml(trTitle)+'">'+
-        '<div class="frame-img"><div'+wmFrameAttrs(s)+'><img '+(i<2?'src="'+escapeHtml(s.image_url)+'" ':'')+'data-src="'+escapeHtml(s.image_url)+'" alt="'+escapeHtml(s.alt_text || s.title || 'Photograph by Islem Zrelli')+'" decoding="async"></div></div>'+
-        '<div class="scrim"></div>'+
-        '<div class="scene-content">'+
-          '<h2'+langDir+'>'+escapeHtml(trTitle)+'</h2>'+
-          '<p class="caption clamped" id="caption-'+s.id+'"'+langDir+'>'+escapeHtml(trStory)+'</p>'+
-          '<button type="button" class="read-more-btn" data-caption-id="caption-'+s.id+'">Read more</button>'+
-          '<div class="scene-rule"></div>'+
-          '<div class="scene-actions">'+
-            '<div class="actions-left">'+
-              '<button class="action-btn like-btn'+(isLiked?' liked':'')+'" data-id="'+s.id+'" aria-pressed="'+isLiked+'" aria-label="Like this photo">'+
-                svgHeart(isLiked)+'<span class="like-count">'+count.toLocaleString()+'</span>'+
-              '</button>'+
-              '<span class="action-divider" aria-hidden="true"></span>'+
-              '<button class="action-btn share-btn" data-id="'+s.id+'" data-title="'+escapeHtml(trTitle)+'" aria-label="Share this photo">'+
-                svgShare+'<span>Share</span>'+
-              '</button>'+
-              '<span class="action-divider admin-only" aria-hidden="true"></span>'+
-              '<button class="action-btn edit-btn admin-only" data-id="'+s.id+'" aria-label="Edit this photo (admin)">'+
-                svgEdit+'<span>Edit</span>'+
-              '</button>'+
-            '</div>'+
-            '<div class="frame-counter"><b>'+num+'</b> — '+String(total).padStart(2,'0')+'</div>'+
-          '</div>'+
-        '</div>'+
-      '</section>';
+      html += photoSceneHtml(s, i, total, 2);
     });
 
     var hasNextChapter = !!nextUnvisitedCategorySlug();
@@ -2615,6 +3113,27 @@
     heroObserver.observe(heroEl);
   })();
 
+  // Fades Hero B's text in the same way animateHeroEntrance() does for the
+  // landing hero, except triggered by scrolling into view rather than page
+  // load — Hero B is never the first thing a visitor sees, so there's no
+  // "on load" moment for it. One-time: once revealed it stays revealed,
+  // same as every other scene's own in-view treatment; the observer
+  // disconnects itself after the first reveal rather than sitting there
+  // toggling .ready back and forth on every scroll past.
+  (function setupHeroWorkReveal(){
+    if(!heroWorkEl || !scroller) return;
+    if(reduceMotion){ heroWorkEl.classList.add('ready'); return; }
+    var workObserver = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          heroWorkEl.classList.add('ready');
+          workObserver.disconnect();
+        }
+      });
+    }, { root: scroller, threshold:0.15 });
+    workObserver.observe(heroWorkEl);
+  })();
+
   // Desktop/trackpad "TikTok-style" scene advance, shared by wheel input
   // (see the listener below) and the up/down .scroll-nav buttons. Touch is
   // left to native momentum + CSS scroll-snap:mandatory (tuned above), which
@@ -2663,15 +3182,22 @@
     }
 
     // The full slide list for navigation purposes: the hero counts as
-    // slide 0, followed by every .scene (photos + finale). This is
-    // deliberately separate from window._allScenes (which setupSceneBehavior
-    // uses for its own IntersectionObserver/lazy-load bookkeeping and stays
-    // photos-only) — navSlides() is only ever used to answer "where am I,
-    // and where's next" for wheel/keyboard/buttons/enter-gallery, so the
-    // hero can be a first-class stop in that sequence without having to
-    // pretend it's a photo scene anywhere else in the code.
+    // slide 0, followed by every "Islem Zrelli" intro-story scene (if any
+    // — see renderIntroStory()), then Hero B (the work-title screen, if
+    // present), then every regular .scene (photos + finale). Built fresh
+    // on every call rather than cached, since which intro scenes exist
+    // can change on a language switch (renderIntroStory() rebuilds them)
+    // and window._allScenes is rebuilt on every renderScenes() too.
+    // window._allScenes conflates intro-story scenes and gallery scenes
+    // (both are plain .scene elements, queried document-wide by
+    // setupSceneBehavior — see its own comment) — introScenes is split out
+    // here specifically so Hero B can be inserted between the two groups.
     function navSlides(){
-      return [heroEl].concat(window._allScenes || []);
+      var introScenes = Array.prototype.slice.call(document.querySelectorAll('#introStory .scene'));
+      var gallery = (window._allScenes || []).filter(function(s){ return introScenes.indexOf(s) === -1; });
+      var slides = [heroEl].concat(introScenes);
+      if(heroWorkEl) slides.push(heroWorkEl);
+      return slides.concat(gallery);
     }
 
     function currentSceneIndex(){
@@ -2827,9 +3353,11 @@
   function updateOnScroll(){
     scrollNavTicking = false;
     updateScrollNavState();
-    var onHero = sceneNav.currentSceneIndex() === 0;
+    var slides = sceneNav.navSlides();
+    var idx = sceneNav.currentSceneIndex();
+    var onHero = slides[idx] === heroEl || slides[idx] === heroWorkEl;
     langSwitch.classList.toggle('show', onHero);
-    if(sceneNav.currentSceneIndex() > 0){
+    if(idx > 0){
       scrollNav.classList.add('show');
       document.getElementById('catNav').classList.add('show');
     }
@@ -3078,12 +3606,16 @@
     photos = results[0].data || [];
     ensureSlugs(photos);
     about = results[1].data || {};
+    applyHeroTextConfig();
     renderHeroBackdrop();
-    renderHeroContact();
+    renderHeroWorkBackdrop();
+    renderHeroContact('heroContactA');
+    renderHeroContact('heroContact');
     updateHeroPhotoCount();
     initCategoryState();
     renderCategoryNav();
     renderLangSwitch();
+    renderIntroStory();
     renderScenes();
     if(activePhotos.length) injectGalleryLd(activePhotos);
     applyInitialRoute();
@@ -3321,6 +3853,7 @@
     else if(currentAdminTab === 'reorder') renderReorderAdmin();
     else if(currentAdminTab === 'landing') renderLandingAdmin();
     else if(currentAdminTab === 'watermark') renderWatermarkAdmin();
+    else if(currentAdminTab === 'storage') renderStorageAdmin();
     else renderAboutAdmin();
   }
 
@@ -3480,7 +4013,7 @@
   // merge the old live overlay used — so admin settings mean exactly
   // what they used to; only where they're applied has changed.
   // Ensures the exact Newsreader italic/500 used everywhere on the
-  // landing page (--font-display — see .signature-svg text, .hero-place)
+  // landing page (--font-display — see .signature-svg text, .hero-work-place)
   // is actually loaded before Canvas draws text with it. Unlike DOM/CSS
   // text, <canvas> text does NOT wait for web fonts on its own — call
   // ctx.font with a not-yet-loaded family and it silently substitutes the
@@ -3728,35 +4261,28 @@
     var tProcessed = performance.now();
 
     var baseName = Date.now() + '-' + Math.random().toString(36).slice(2,8);
-    var origExt = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
-    var originalPath = baseName + '.' + origExt;
     var pubFile = processed.file;
     var pubExt = (pubFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
     var publicPath = baseName + '-web.' + pubExt;
 
-    var totalBytes = file.size + pubFile.size;
-    var origLoaded = 0, pubLoaded = 0;
-    function reportUpload(){
-      var pct = totalBytes > 0 ? Math.round(100 * (origLoaded + pubLoaded) / totalBytes) : 100;
+    // Only the small, resized/watermarked public copy is ever uploaded now
+    // — no full-resolution "original" master. That private original was
+    // never read back by the app for anything (see the ORIGINALS_BUCKET
+    // declaration's own old comment), yet being the untouched source file
+    // it was routinely several MB to tens of MB each — with 150+ photos,
+    // that alone was the entire cause of a real Supabase storage-quota
+    // overage despite the visible site needing barely any space at all.
+    // If a true full-quality master is ever wanted again later, keep your
+    // own local backups of originals before uploading — this app no
+    // longer keeps one for you.
+    var totalBytes = pubFile.size;
+    function reportUpload(loaded){
+      var pct = totalBytes > 0 ? Math.round(100 * loaded / totalBytes) : 100;
       report('uploading', Math.min(100, pct));
     }
-    reportUpload();
+    reportUpload(0);
 
-    var originalUploadPromise = xhrUploadToBucket(ORIGINALS_BUCKET, originalPath, file, function(loaded){ origLoaded = loaded; reportUpload(); });
-    var publicUploadPromise = xhrUploadToBucket(BUCKET, publicPath, pubFile, function(loaded){ pubLoaded = loaded; reportUpload(); });
-    var uploads = await Promise.all([originalUploadPromise, publicUploadPromise]);
-    var originalUpload = uploads[0], uploadRes = uploads[1];
-
-    if(originalUpload.error){
-      // Private master failed. If the public copy nonetheless finished,
-      // clean it up — nothing below ever returns its URL, but we don't
-      // want an orphaned watermarked file sitting in public storage with
-      // no private original behind it.
-      if(!uploadRes.error){
-        try{ await sb.storage.from(BUCKET).remove([publicPath]); } catch(e){}
-      }
-      throw new Error('Could not save the original privately (' + originalUpload.error.message + '). Set up the "' + ORIGINALS_BUCKET + '" bucket first — see the PRIVATE ORIGINALS BUCKET note near the top of this file — then try again.');
-    }
+    var uploadRes = await xhrUploadToBucket(BUCKET, publicPath, pubFile, function(loaded){ reportUpload(loaded); });
     if(uploadRes.error) throw new Error(uploadRes.error.message);
     var tUploaded = performance.now();
 
@@ -3765,6 +4291,9 @@
     // origSize/processedSize/format info here is read straight off the real
     // File/Blob objects that were actually uploaded — never estimated — so
     // the admin "before/after" panel reflects exactly what's now stored.
+    // origSize/origType still reflect the source file the admin picked
+    // (for the before/after comparison), even though that source file
+    // itself is never uploaded anywhere anymore.
     var result = {
       url: urlRes.data.publicUrl,
       width: processed.width,
@@ -3780,8 +4309,8 @@
     var tDone = performance.now();
     // Actual measured numbers for this one upload — open devtools to see
     // real before/after timings rather than assuming the optimization
-    // worked. 2 network requests total (original + processed, run
-    // concurrently) versus 2 sequential requests in the old pipeline.
+    // worked. 1 network request (just the processed copy) versus 2 back
+    // when a full-resolution private original was also uploaded.
     console.info('[upload] ' + file.name, {
       processingMs: Math.round(tProcessed - t0),
       uploadingMs: Math.round(tUploaded - tProcessed),
@@ -3789,7 +4318,7 @@
       totalMs: Math.round(tDone - t0),
       origSize: file.size,
       processedSize: pubFile.size,
-      networkRequests: 2
+      networkRequests: 1
     });
     report('done', 100);
     return result;
@@ -4034,6 +4563,12 @@
   var bulkEditFieldsOpen = false;  // whether the bulk tags/location/date panel (item 9) is showing
   var translatePendingPanelOpen = false; // whether the "Translate Pending" picker (item 13) is showing
   var translateQueue = [];         // [{ id, photoId, lang, status, error }] — same shape/pattern as bulkQueue above
+  // Whether the "Clean Filename Titles" full-screen review picker is
+  // showing, and which of the flagged photos are currently checked to
+  // have their title cleared — see looksLikeFilenameTitle()/
+  // openCleanTitles() below. null while the picker is closed.
+  var cleaningTitles = false;
+  var cleanTitleSelectedIds = null;
   var photoPageSize = 60;          // how many rows render per "page" in a long list
   var photoVisibleCount = photoPageSize;
   // Files staged from the bulk-upload file picker, waiting on the admin to
@@ -4083,6 +4618,7 @@
       // the list itself was updated optimistically back when the delete
       // was scheduled, so it doesn't need touching again here.
       if(adminOverlay && adminOverlay.style.display !== 'none') renderAdminStats();
+      removeStorageFilesForUrls(toCommit.photos.map(function(p){ return p.image_url; }));
     });
   }
 
@@ -4250,6 +4786,44 @@
     if(!base) return 'Untitled';
     return base.replace(/\w\S*/g, function(w){ return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); });
   }
+
+  // Flags a title that still looks like an unedited camera/phone/app export
+  // filename rather than something a person actually typed — e.g. what
+  // bulk upload used to auto-fill from the file name before that default
+  // was removed (see titleFromFilename above and its old call site). Feeds
+  // the "Clean Filename Titles" tool below. Deliberately a heuristic: for
+  // photos already saved, the real original filename is gone for good —
+  // uploadFile() names the file in storage from a timestamp+random string,
+  // never the original — so there's nothing exact left to compare against.
+  // This instead matches the common SHAPES those filenames come in. Always
+  // shown to a human to confirm/uncheck before anything is cleared — never
+  // runs unattended, and a title that happens to be short or numeric for a
+  // real, deliberate reason can simply be left unchecked.
+  function looksLikeFilenameTitle(title){
+    var t = String(title || '').trim();
+    if(!t) return false;
+    // Nothing but digits, spaces and dots — a bare timestamp/serial, e.g.
+    // "20230521 143022" or "1000023456".
+    if(/^[\d\s.]+$/.test(t)) return true;
+    // A common camera/phone/app export prefix immediately followed by a
+    // digit run: "Img 1234", "Dscn0045", "Screenshot 2023 05 21 143022",
+    // "Whatsapp Image 2023 05 21 At 14.30.22".
+    if(/^(img|image|dsc|dscn|dscf|dcim|mvimg|mvi|pxl|vid|video|photo|pic|picture|snapshot|screenshot|screen shot|whatsapp image|whatsapp video|received image|received file|fb img|signal)\b[\s._-]*\d/i.test(t)) return true;
+    // A short letter prefix mashed directly against a long digit run with
+    // no separator at all, e.g. "P1010234", "Dscf1234567" — common on
+    // cameras that don't use underscores in their default names.
+    if(/^[a-z]{1,6}\d{4,}$/i.test(t)) return true;
+    // Mostly digits with only a couple of stray letters — catches odds
+    // and ends the patterns above miss, e.g. "20230521 143022 Edited".
+    var digits = t.replace(/[^0-9]/g, '').length;
+    var letters = t.replace(/[^a-z]/gi, '').length;
+    if(digits >= 8 && letters <= 3) return true;
+    return false;
+  }
+  function filenameStyleTitleCandidates(){
+    return adminPhotos.filter(function(p){ return looksLikeFilenameTitle(p.title); });
+  }
+
   // Runs `worker` over `items` with at most `limit` running concurrently.
   // Generic — not photo-specific — so it stays out of the way of anything
   // else the admin does; nothing here touches the DOM directly.
@@ -4443,7 +5017,7 @@
       var res = item.uploadResult;
       var d = item.defaults || {};
       var payload = {
-        title: titleFromFilename(item.file.name), story:'', category: d.categoryName || '', location: d.location || '', tags: d.tags || '', date: d.date || null, alt_text:'',
+        title:'', story:'', category: d.categoryName || '', location: d.location || '', tags: d.tags || '', date: d.date || null, alt_text:'',
         published: !!d.published, featured: !!d.featured, is_favorite:false,
         image_url: res.url, image_width: res.width, image_height: res.height, display_order: item.order
       };
@@ -4918,7 +5492,122 @@
     });
   }
 
+  /* ---------- Clean Filename Titles ---------- */
+  // Full-screen review picker (same look/pattern as the category "Assign
+  // Photos" grid — checkbox-labelled thumbnails) for bulk-clearing titles
+  // that still look like an unedited filename — see looksLikeFilenameTitle
+  // above. Every flagged photo starts pre-checked (the common case is
+  // "yes, clear all of these"), but nothing is written to the database
+  // until the admin reviews the grid and hits Clear — unchecking any of
+  // them leaves that title exactly as it is.
+  function openCleanTitles(){
+    cleaningTitles = true;
+    cleanTitleSelectedIds = new Set(filenameStyleTitleCandidates().map(function(p){ return p.id; }));
+    drawPhotosAdmin();
+  }
+  function closeCleanTitles(){
+    cleaningTitles = false;
+    cleanTitleSelectedIds = null;
+    drawPhotosAdmin();
+  }
+  function drawCleanTitles(){
+    var list = filenameStyleTitleCandidates();
+
+    if(list.length === 0){
+      adminScroll.innerHTML = ''+
+        '<div class="assign-toolbar">'+
+          '<button class="admin-btn secondary" id="cleanTitlesBackBtn">← Back to Photos</button>'+
+          '<h3>Clean Filename Titles</h3>'+
+        '</div>'+
+        '<p class="admin-empty">No filename-style titles found — everything looks intentional.</p>';
+      document.getElementById('cleanTitlesBackBtn').addEventListener('click', closeCleanTitles);
+      return;
+    }
+
+    var html = ''+
+      '<div class="assign-toolbar">'+
+        '<button class="admin-btn secondary" id="cleanTitlesBackBtn">← Back to Photos</button>'+
+        '<h3>Clean Filename Titles</h3>'+
+      '</div>'+
+      '<p class="sub">These '+list.length+' title'+(list.length===1?'':'s')+' still look'+(list.length===1?'s':'')+' like an unedited camera/phone filename rather than something typed in — most likely auto-filled by an old bulk upload. Checked photos will have their title cleared (shown as no title on the site, per the earlier fix) so you can write a real one later, or leave it blank. Uncheck anything that\'s actually meant to be there.</p>'+
+      '<div class="assign-controls">'+
+        '<span class="sub" id="cleanTitlesCount">'+cleanTitleSelectedIds.size+' selected</span>'+
+        '<button class="admin-btn secondary" id="cleanTitlesSelectAllBtn">Select all ('+list.length+')</button>'+
+        '<button class="admin-btn secondary" id="cleanTitlesClearSelBtn">Clear selection</button>'+
+      '</div>'+
+      '<div class="assign-grid">' + list.map(function(p){
+        var checked = cleanTitleSelectedIds.has(p.id);
+        return ''+
+          '<label class="assign-thumb'+(checked?' checked':'')+'" data-id="'+p.id+'">'+
+            '<input type="checkbox" '+(checked?'checked':'')+'>'+
+            '<img '+adminThumbAttrs(p.image_url, 160)+' loading="lazy" alt="">'+
+            '<span class="assign-thumb-title">'+escapeHtml(p.title||'')+'</span>'+
+          '</label>';
+      }).join('') + '</div>'+
+      '<div class="admin-form-actions">'+
+        '<button class="admin-btn secondary" id="cleanTitlesCancelBtn">Cancel</button>'+
+        '<button class="admin-btn" id="cleanTitlesApplyBtn">Clear '+cleanTitleSelectedIds.size+' Title'+(cleanTitleSelectedIds.size===1?'':'s')+'</button>'+
+      '</div>';
+
+    adminScroll.innerHTML = html;
+    wireCleanTitles(list);
+  }
+  function wireCleanTitles(list){
+    document.getElementById('cleanTitlesBackBtn').addEventListener('click', closeCleanTitles);
+    document.getElementById('cleanTitlesCancelBtn').addEventListener('click', closeCleanTitles);
+
+    function refreshCount(){
+      var countEl = document.getElementById('cleanTitlesCount');
+      if(countEl) countEl.textContent = cleanTitleSelectedIds.size + ' selected';
+      var applyBtn = document.getElementById('cleanTitlesApplyBtn');
+      if(applyBtn) applyBtn.textContent = 'Clear '+cleanTitleSelectedIds.size+' Title'+(cleanTitleSelectedIds.size===1?'':'s');
+    }
+
+    var selectAllBtn = document.getElementById('cleanTitlesSelectAllBtn');
+    if(selectAllBtn) selectAllBtn.addEventListener('click', function(){
+      list.forEach(function(p){ cleanTitleSelectedIds.add(p.id); });
+      drawCleanTitles();
+    });
+    var clearSelBtn = document.getElementById('cleanTitlesClearSelBtn');
+    if(clearSelBtn) clearSelBtn.addEventListener('click', function(){
+      cleanTitleSelectedIds.clear();
+      drawCleanTitles();
+    });
+
+    adminScroll.querySelectorAll('.assign-thumb').forEach(function(el){
+      var input = el.querySelector('input');
+      function toggle(nextChecked){
+        var id = el.getAttribute('data-id');
+        if(nextChecked) cleanTitleSelectedIds.add(id); else cleanTitleSelectedIds.delete(id);
+        el.classList.toggle('checked', nextChecked);
+        input.checked = nextChecked;
+        refreshCount();
+      }
+      el.addEventListener('click', function(e){
+        e.preventDefault();
+        toggle(!input.checked);
+      });
+    });
+
+    document.getElementById('cleanTitlesApplyBtn').addEventListener('click', async function(){
+      var btn = this;
+      var ids = Array.from(cleanTitleSelectedIds);
+      if(!ids.length) return;
+      btn.disabled = true; btn.textContent = 'Clearing…';
+      try{
+        await Promise.all(ids.map(function(id){ return sb.from('photos').update({ title:'' }).eq('id', id); }));
+      } catch(err){
+        btn.disabled = false; refreshCount();
+        alert('Could not clear: ' + err.message);
+        return;
+      }
+      closeCleanTitles();
+      renderPhotosAdmin();
+    });
+  }
+
   function drawPhotosAdmin(){
+    if(cleaningTitles){ drawCleanTitles(); return; }
     var html = '';
     if(editingPhoto){
       html += photoFormHtml(editingPhoto);
@@ -4932,6 +5621,7 @@
         '<input type="file" accept="image/*" id="bulkUploadFile" multiple style="display:none;">'+
         '<button class="admin-btn" id="addPhotoBtn">+ Add Photo</button>'+
         '<button class="admin-btn secondary" id="translatePendingBtn">Translate Pending…</button>'+
+        '<button class="admin-btn secondary" id="cleanTitlesBtn">Clean Filename Titles…</button>'+
       '</div>'+
       '<div class="upload-dropzone" id="uploadDropzone">'+
         '<span>Drag photos (or a whole folder) here, or paste from clipboard</span>'+
@@ -5056,6 +5746,9 @@
     });
     if(translatePendingPanelOpen) wireTranslatePendingPanel();
     if(translateQueue.length) renderTranslatePanel();
+
+    var cleanTitlesBtn = document.getElementById('cleanTitlesBtn');
+    if(cleanTitlesBtn) cleanTitlesBtn.addEventListener('click', openCleanTitles);
 
     if(editingPhoto) wirePhotoForm(editingPhotoFromSite ? {
       // Opened via the on-site Edit pencil: Save should hand the admin
@@ -5582,6 +6275,7 @@
         var confirmed = window.confirm('Delete this photograph permanently?\nThis action cannot be undone.');
         if(!confirmed) return;
         var idToDelete = editingPhoto.id;
+        var urlToDelete = editingPhoto.image_url;
         deleteBtn.disabled = true;
         // A real, immediate delete (not the dashboard list's undo-window
         // delete) — the confirmation step above IS this entry point's
@@ -5594,6 +6288,7 @@
           showPhotoFormError(res.error.message);
           return;
         }
+        removeStorageFilesForUrls([urlToDelete]); // don't await — DB delete above is what matters for the UI to proceed on
         // photo_categories rows for this photo are cleaned up automatically
         // (on delete cascade — see the SQL near the top of this file), same
         // as every other delete path in this admin.
@@ -5682,9 +6377,11 @@
           watermark_scale: (parseInt(document.getElementById('f-wm-scale').value,10) || 100) / 100
         };
         var res = await uploadFile(file, wmOverride, false, progressUi.onProgress);
+        var oldUrl = editingPhoto.image_url;
         editingPhoto.image_url = res.url;
         editingPhoto.image_width = res.width;
         editingPhoto.image_height = res.height;
+        if(oldUrl && oldUrl !== res.url) removeStorageFilesForUrls([oldUrl]); // the just-replaced file would otherwise sit in storage forever, unreferenced
         var preview = document.getElementById('photoPreview');
         preview.src = res.url;
         preview.style.display = 'block';
@@ -5785,7 +6482,7 @@
   async function renderCategoriesAdmin(){
     renderAdminStats();
     adminScroll.innerHTML = '<p class="admin-empty">Loading…</p>';
-    await Promise.all([loadAdminCategories(), loadPhotoCategories(), loadAdminPhotos()]);
+    await Promise.all([loadAdminCategories(), loadPhotoCategories(), loadAdminPhotos(), loadSettings()]);
     drawCategoriesAdmin();
   }
 
@@ -5853,7 +6550,9 @@
     if(editingCategory){
       html += categoryFormHtml(editingCategory);
     } else {
-      html += '<div class="admin-toolbar"><button class="admin-btn" id="addCategoryBtn">+ New Category</button></div>';
+      html += '<div class="admin-toolbar"><button class="admin-btn" id="addCategoryBtn">+ New Category</button>'+
+        (adminCategories.length ? '<button class="admin-btn secondary" id="hideAllCatBtn">Hide All</button><button class="admin-btn secondary" id="showAllCatBtn">Show All</button>' : '')+
+      '</div>';
       var orphans = findOrphanCategoryNames();
       var orphanNames = Object.keys(orphans);
       if(orphanNames.length){
@@ -5872,6 +6571,11 @@
           '<div class="col-title"><strong>★ Favorite</strong><span class="sub">'+favoritePhotoCount()+(favoritePhotoCount()===1?' photograph':' photographs')+' — set per-photo, not a category row</span></div>'+
           '<span class="status on">SYSTEM</span>'+
           '<div class="admin-row-actions"><button data-act="assign">Assign Photos</button></div>'+
+        '</div>'+
+        '<div class="admin-row cat-row" data-id="all-pseudo">'+
+          '<div class="col-title"><strong>All</strong><span class="sub">'+galleryPhotos().length+(galleryPhotos().length===1?' photograph':' photographs')+' — every published photo, automatically</span></div>'+
+          '<span class="status '+(settings.hide_all_category?'off':'on')+'">'+(settings.hide_all_category?'HIDDEN':'SYSTEM')+'</span>'+
+          '<div class="admin-row-actions"><button data-act="toggle-all-pseudo">'+(settings.hide_all_category?'Show':'Hide')+'</button></div>'+
         '</div>';
       adminCategories.forEach(function(c, i){
         var count = categoryPhotoCount(c.id);
@@ -5897,6 +6601,39 @@
 
     var addBtn = document.getElementById('addCategoryBtn');
     if(addBtn) addBtn.addEventListener('click', function(){ editingCategory = blankCategory(); drawCategoriesAdmin(); });
+    // Bulk on/off switch for every real category at once (Favorite is a
+    // system row, not a category, so it's excluded — its own visibility
+    // isn't a thing, it's just whichever photos are marked favorite).
+    // Same is_visible field, same per-row update the single Hide/Show
+    // button already uses below — this just fires it for every row in
+    // one go instead of one at a time. The public nav (navCategoryList())
+    // and photo-category resolution (categoryForPhoto()) already skip
+    // anything with is_visible === false, so toggling this instantly
+    // removes/restores every category from the visible site — no photos
+    // are touched or unpublished, only their category visibility.
+    var hideAllBtn = document.getElementById('hideAllCatBtn');
+    if(hideAllBtn) hideAllBtn.addEventListener('click', async function(){
+      if(!confirm('Hide all '+adminCategories.length+' categories from the website? Photos stay published — only the category nav and pages disappear. You can bring them all back with "Show All" any time.')) return;
+      hideAllBtn.disabled = true; hideAllBtn.textContent = 'Hiding…';
+      try{
+        await Promise.all(adminCategories.map(function(c){ return sb.from('categories').update({ is_visible:false }).eq('id', c.id); }));
+        await renderCategoriesAdmin();
+      } catch(err){
+        hideAllBtn.disabled = false; hideAllBtn.textContent = 'Hide All';
+        alert(err.message);
+      }
+    });
+    var showAllBtn = document.getElementById('showAllCatBtn');
+    if(showAllBtn) showAllBtn.addEventListener('click', async function(){
+      showAllBtn.disabled = true; showAllBtn.textContent = 'Showing…';
+      try{
+        await Promise.all(adminCategories.map(function(c){ return sb.from('categories').update({ is_visible:true }).eq('id', c.id); }));
+        await renderCategoriesAdmin();
+      } catch(err){
+        showAllBtn.disabled = false; showAllBtn.textContent = 'Show All';
+        alert(err.message);
+      }
+    });
     if(editingCategory) wireCategoryForm();
     var importBtn = document.getElementById('importLegacyCatBtn');
     if(importBtn) importBtn.addEventListener('click', async function(){
@@ -5912,6 +6649,24 @@
 
     adminScroll.querySelectorAll('.admin-row[data-id]').forEach(function(row){
       var id = row.getAttribute('data-id');
+      if(id === 'all-pseudo'){
+        var toggleAllBtn = row.querySelector('button[data-act="toggle-all-pseudo"]');
+        if(toggleAllBtn) toggleAllBtn.addEventListener('click', async function(){
+          var next = !settings.hide_all_category;
+          toggleAllBtn.disabled = true; toggleAllBtn.textContent = next ? 'Hiding…' : 'Showing…';
+          try{
+            var payload = { id:1, hide_all_category: next, updated_at: new Date().toISOString() };
+            var result = await sb.from('site_settings').upsert(payload);
+            if(result.error) throw new Error(result.error.message);
+            settings.hide_all_category = next;
+            drawCategoriesAdmin();
+          } catch(err){
+            toggleAllBtn.disabled = false; toggleAllBtn.textContent = next ? 'Hide' : 'Show';
+            alert(err.message);
+          }
+        });
+        return;
+      }
       var isFavoriteRow = id === 'favorite';
       var cat = isFavoriteRow ? { id:'favorite', name:'Favorite', system:true } : adminCategories.find(function(c){ return String(c.id) === id; });
       row.querySelectorAll('button').forEach(function(btn){
@@ -6215,8 +6970,147 @@
   }
 
   /* ---------- Landing Page tab (image picker + crop/position tool) ---------- */
-  var landingState = null; // { mode, url, crop:{scale,x,y} } — working copy, only saved on "Save Changes"
+  var landingState = null; // { mode, url, crop:{scale,x,y}, workMode, workUrl, heroAText, heroBText } — working copy, only saved on "Save Changes"
   var landingPickerQuery = '';
+  var workPickerQuery = ''; // search box for the Hero B picker grid below
+  var heroPreviewWhich = 'a';       // 'a' | 'b' — which hero the live preview iframe is showing
+  var heroPreviewDevice = 'desktop'; // 'desktop' | 'mobile' — simulated viewport for the preview
+
+  // Pulls the actual hero-related CSS straight out of this page's own
+  // stylesheet (rather than a hand-copied second version that could
+  // silently drift from the real thing) for the live preview iframe
+  // below. Cached — the stylesheet doesn't change at runtime, so this
+  // only needs to run once no matter how many times the preview redraws.
+  // Deliberately excludes anything to do with .hero-mark/#izMark: the
+  // preview never renders that element at all (see heroPreviewMarkup),
+  // so its rules would be inert here regardless, but leaving them out
+  // entirely keeps this feature unambiguously separate from the admin
+  // gesture rather than relying on that inertness.
+  var cachedHeroPreviewCss = null;
+  function extractHeroPreviewCss(){
+    if(cachedHeroPreviewCss !== null) return cachedHeroPreviewCss;
+    var include = [':root', '.hero', '.signature', '.enter', '.arrow', '.sr-only', 'html', 'body'];
+    var out = [];
+    function included(selectorText){
+      if(!selectorText || selectorText.indexOf('hero-mark') !== -1) return false;
+      return include.some(function(token){ return selectorText.indexOf(token) !== -1; });
+    }
+    function walk(rules){
+      Array.prototype.forEach.call(rules, function(rule){
+        if(typeof CSSMediaRule !== 'undefined' && rule instanceof CSSMediaRule){
+          var inner = [];
+          Array.prototype.forEach.call(rule.cssRules, function(r){
+            if(r.selectorText && included(r.selectorText)) inner.push(r.cssText);
+          });
+          if(inner.length) out.push('@media ' + rule.media.mediaText + '{' + inner.join('\n') + '}');
+        } else if(typeof CSSKeyframesRule !== 'undefined' && rule instanceof CSSKeyframesRule){
+          if(/drip|heroChevronPulse/i.test(rule.name || '')) out.push(rule.cssText);
+        } else if(rule.selectorText && included(rule.selectorText)){
+          out.push(rule.cssText);
+        }
+      });
+    }
+    Array.prototype.forEach.call(document.styleSheets, function(sheet){
+      var rules;
+      try{ rules = sheet.cssRules; } catch(e){ return; } // cross-origin (Google Fonts) sheet — nothing to extract from it anyway
+      if(rules) walk(rules);
+    });
+    cachedHeroPreviewCss = out.join('\n');
+    return cachedHeroPreviewCss;
+  }
+
+  // Builds a standalone (no app JS, no admin gesture, no contact/language
+  // chrome) copy of just the hero being edited, styled with the real
+  // extracted CSS above and the config currently being typed/dragged in
+  // the form — this is what makes the preview an accurate rendering
+  // rather than a hand-built approximation. .ready/.filled/.in-view are
+  // applied immediately (no entrance animation) since the point here is
+  // instant feedback on a slider drag, not replaying the reveal.
+  function heroPreviewMarkup(which, cfg, backdropUrl){
+    var bg = '<div class="hero-backdrop in-view"><img src="'+escapeHtml(backdropUrl || '')+'" alt=""></div><div class="hero-scrim"></div>';
+    if(which === 'a'){
+      var varsA = '--sig-scale:'+cfg.name_scale+'; --sig-y:'+cfg.name_y+'px; --role-scale:'+cfg.role_scale+'; --role-y:'+cfg.role_y+'px; --extra1-scale:'+cfg.extra1.scale+'; --extra1-y:'+cfg.extra1.y+'px; --extra2-scale:'+cfg.extra2.scale+'; --extra2-y:'+cfg.extra2.y+'px; --scrim-opacity:'+cfg.scrim_opacity+';';
+      return '<header class="hero ready" style="position:relative; height:100vh; '+varsA+'">'+bg+
+        '<div class="hero-inner">'+
+          '<h1 class="signature-wrap"><svg class="signature-svg" viewBox="0 0 700 160" preserveAspectRatio="xMidYMid meet"><text class="filled" x="50%" y="62%" text-anchor="middle" dominant-baseline="middle">'+escapeHtml(cfg.name)+'</text></svg></h1>'+
+          '<p class="hero-role">'+escapeHtml(cfg.role)+'</p>'+
+          (cfg.extra1.enabled && cfg.extra1.text ? '<p class="hero-extra-line hero-extra-1">'+escapeHtml(cfg.extra1.text)+'</p>' : '')+
+          (cfg.extra2.enabled && cfg.extra2.text ? '<p class="hero-extra-line hero-extra-2">'+escapeHtml(cfg.extra2.text)+'</p>' : '')+
+          '<button class="enter" style="pointer-events:none;">'+escapeHtml(cfg.button_label)+'<span class="arrow-line"></span></button>'+
+        '</div>'+
+      '</header>';
+    }
+    var varsB = '--place-scale:'+cfg.location_scale+'; --place-y:'+cfg.location_y+'px; --credit-scale:'+cfg.credit_scale+'; --credit-y:'+cfg.credit_y+'px; --extra1-scale:'+cfg.extra1.scale+'; --extra1-y:'+cfg.extra1.y+'px; --extra2-scale:'+cfg.extra2.scale+'; --extra2-y:'+cfg.extra2.y+'px; --scrim-opacity:'+cfg.scrim_opacity+';';
+    return '<header class="hero hero-work ready" style="position:relative; height:100vh; '+varsB+'">'+bg+
+      '<div class="hero-inner">'+
+        '<div class="hero-kicker"><p class="hero-work-place">'+escapeHtml(cfg.location)+'</p><p class="hero-count">14 stories of documentary photography</p></div>'+
+        '<p class="hero-credit">'+escapeHtml(cfg.credit)+'</p>'+
+        (cfg.extra1.enabled && cfg.extra1.text ? '<p class="hero-extra-line hero-extra-1">'+escapeHtml(cfg.extra1.text)+'</p>' : '')+
+        (cfg.extra2.enabled && cfg.extra2.text ? '<p class="hero-extra-line hero-extra-2">'+escapeHtml(cfg.extra2.text)+'</p>' : '')+
+      '</div>'+
+    '</header>';
+  }
+
+  var HERO_PREVIEW_SIZES = { desktop: { w:1280, h:800 }, mobile: { w:375, h:780 } };
+
+  function buildHeroPreviewSrcdoc(which, cfg, backdropUrl){
+    var fontLink = document.querySelector('link[href*="fonts.googleapis"]');
+    var fontHref = fontLink ? fontLink.href : 'https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@300;400;500;600&display=swap';
+    return '<!DOCTYPE html><html><head><meta charset="utf-8">'+
+      '<link href="'+fontHref+'" rel="stylesheet">'+
+      '<style>html,body{margin:0;padding:0;background:#050505;overflow:hidden;}'+extractHeroPreviewCss()+'</style>'+
+      '</head><body>'+heroPreviewMarkup(which, cfg, backdropUrl)+'</body></html>';
+  }
+
+  // Regenerates the preview iframe's whole document (simplest reliable
+  // way to reflect a config change — an iframe's own internal viewport is
+  // what makes vw/vh-based clamp() sizing and the min-width:860px layout
+  // switch evaluate correctly for a *simulated* 375px phone or 1280px
+  // desktop, which a same-document clone can't do: those units always
+  // resolve against the real browser window, not any wrapping element's
+  // size, no matter how that element is sized or scaled). Debounced by
+  // its caller so a slider drag doesn't reload the iframe on every pixel.
+  function updateHeroPreview(){
+    var frame = document.getElementById('heroPreviewFrame');
+    var viewport = document.getElementById('heroPreviewViewport');
+    if(!frame || !viewport || !landingState) return;
+    try{
+      var size = HERO_PREVIEW_SIZES[heroPreviewDevice];
+      var cfg = heroPreviewWhich === 'a' ? landingState.heroAText : landingState.heroBText;
+      var backdropUrl = heroPreviewWhich === 'a'
+        ? (landingState.url || (adminPhotos[0] && adminPhotos[0].image_url) || '')
+        : (landingState.workUrl || landingState.url || (adminPhotos[0] && adminPhotos[0].image_url) || '');
+      frame.width = size.w; frame.height = size.h;
+      var displayW = viewport.clientWidth || 300;
+      var scale = displayW / size.w;
+      frame.style.transform = 'scale(' + scale + ')';
+      viewport.style.height = Math.round(size.h * scale) + 'px';
+      frame.srcdoc = buildHeroPreviewSrcdoc(heroPreviewWhich, cfg, backdropUrl);
+      frame.style.display = '';
+      var errEl = document.getElementById('heroPreviewError');
+      if(errEl) errEl.style.display = 'none';
+    } catch(err){
+      // Fails loud rather than leaving a blank box with no clue why —
+      // e.g. if a future browser blocks reading a stylesheet's cssRules
+      // for a reason try/catch inside extractHeroPreviewCss() doesn't
+      // already cover.
+      frame.style.display = 'none';
+      var msg = document.getElementById('heroPreviewError');
+      if(!msg){
+        msg = document.createElement('p');
+        msg.id = 'heroPreviewError';
+        msg.className = 'admin-error';
+        viewport.parentNode.insertBefore(msg, viewport.nextSibling);
+      }
+      msg.textContent = 'Preview failed to render: ' + err.message;
+      msg.style.display = 'block';
+    }
+  }
+  var heroPreviewDebounceTimer = null;
+  function scheduleHeroPreviewUpdate(){
+    if(heroPreviewDebounceTimer) clearTimeout(heroPreviewDebounceTimer);
+    heroPreviewDebounceTimer = setTimeout(updateHeroPreview, 90);
+  }
 
   async function renderLandingAdmin(){
     renderAdminStats();
@@ -6227,8 +7121,24 @@
     landingState = {
       mode: a.hero_image_mode || (a.hero_image_url ? 'upload' : 'gallery'),
       url: a.hero_image_url || '',
-      crop: Object.assign({ scale:1, x:50, y:50 }, a.hero_crop || {})
+      crop: Object.assign({ scale:1, x:50, y:50 }, a.hero_crop || {}),
+      // Hero B has no stored "mode" of its own (no work_title_image_mode
+      // column — see the SQL comment) since, unlike the landing hero, it
+      // has no crop tool that needs to remember how the current URL got
+      // there. Reopening this tab always starts on the picker grid; that
+      // choice only decides which control is shown right now, not
+      // anything saved.
+      workMode: 'gallery',
+      workUrl: a.work_title_image_url || '',
+      // Working copies of both heroes' text config — see the "HERO TEXT
+      // CONTROL" SQL comment and applyHeroTextConfig() for what each field
+      // does. mergeHeroTextConfig() fills in anything missing from the
+      // defaults, so a brand-new site (raw = null) starts the form showing
+      // exactly its current hardcoded copy, not blank fields.
+      heroAText: mergeHeroTextConfig(HERO_A_TEXT_DEFAULTS, a.hero_a_text),
+      heroBText: mergeHeroTextConfig(HERO_B_TEXT_DEFAULTS, a.hero_b_text)
     };
+    heroPreviewWhich = 'a';
     drawLandingAdmin();
   }
 
@@ -6271,6 +7181,46 @@
           '<div class="crop-zoom-row"><label class="sub">Zoom</label><input type="range" id="cropZoom" min="1" max="2.5" step="0.01" value="'+s.crop.scale+'"><span id="cropZoomVal">'+Math.round(s.crop.scale*100)+'%</span></div>'+
         '</div>'+
       '</div>'+
+      '<h3 style="margin-top:28px;">Work Title Backdrop</h3>'+
+      '<p class="sub" style="margin:0 0 4px;">The background photo for the second landing screen — the "title page" right before the gallery begins (location, story count, language picker, signature). Leave unset to reuse the exact same photo as above.</p>'+
+      '<div class="admin-field"><label>Image Source</label>'+
+        '<div class="landing-mode-row">'+
+          '<button type="button" class="landing-mode-btn'+(s.workMode==='gallery'?' active':'')+'" id="workModeGallery">Use Existing Photo</button>'+
+          '<button type="button" class="landing-mode-btn'+(s.workMode==='upload'?' active':'')+'" id="workModeUpload">Upload Photo</button>'+
+        '</div>'+
+      '</div>'+
+      (s.workMode === 'gallery' ? ''+
+        '<div class="admin-field" id="workPickerWrap">'+
+          '<input type="text" id="workPickerSearch" class="landing-picker-search" placeholder="Search by title, category, location…" value="'+escapeHtml(workPickerQuery)+'">'+
+          '<div class="landing-picker-grid" id="workPickerGrid"></div>'+
+        '</div>'
+      : ''+
+        '<div class="admin-field" id="workUploadWrap">'+
+          '<input type="file" accept="image/*" id="workUploadFile">'+
+          uploadProgressHtml('workUpload')+
+        '</div>'
+      )+
+      '<div class="admin-field">'+
+        (s.workUrl
+          ? '<label>Currently set</label><div class="landing-work-preview"><img src="'+escapeHtml(s.workUrl)+'" alt=""><button type="button" class="admin-btn secondary" id="workBackdropClearBtn">Use Same Photo As Above Instead</button></div>'
+          : '<p class="sub">Not set — currently falling back to the same photo as the landing hero above.</p>')+
+      '</div>'+
+      '<h3 style="margin-top:28px;">Hero Text</h3>'+
+      '<p class="sub" style="margin:0 0 4px;">Full control over every line of text on both hero screens — what it says, how large it is, and how far up or down it sits — without waiting on an HTML change. Sizes are relative (a slider, not a fixed pixel value) so "bigger" stays proportionally bigger on a phone and a desktop alike; position is limited to a safe range that can\'t push text into the corner mark, language switcher, or contact badges on any screen. Watch the live preview on the right as you edit.</p>'+
+      '<div class="hero-text-tabs">'+
+        '<button type="button" class="landing-mode-btn'+(heroPreviewWhich==='a'?' active':'')+'" id="heroTextTabA">Hero A — Landing</button>'+
+        '<button type="button" class="landing-mode-btn'+(heroPreviewWhich==='b'?' active':'')+'" id="heroTextTabB">Hero B — Work Title</button>'+
+      '</div>'+
+      '<div class="hero-text-editor">'+
+        '<div class="hero-text-form" id="heroTextForm">'+heroTextFormHtml(heroPreviewWhich, heroPreviewWhich==='a'?s.heroAText:s.heroBText)+'</div>'+
+        '<div class="hero-text-preview">'+
+          '<div class="crop-preview-tabs">'+
+            '<button type="button" class="hero-preview-device-tab'+(heroPreviewDevice==='desktop'?' active':'')+'" id="heroPreviewDesktopBtn">Desktop Preview</button>'+
+            '<button type="button" class="hero-preview-device-tab'+(heroPreviewDevice==='mobile'?' active':'')+'" id="heroPreviewMobileBtn">Mobile Preview</button>'+
+          '</div>'+
+          '<div class="hero-preview-viewport" id="heroPreviewViewport"><iframe id="heroPreviewFrame" title="Hero preview" scrolling="no"></iframe></div>'+
+        '</div>'+
+      '</div>'+
       '<p class="admin-error" id="landingFormError" style="display:none;"></p>'+
       '<div class="admin-form-actions">'+
         '<span class="admin-saved" id="landingSaved" style="display:none;">Saved.</span>'+
@@ -6278,6 +7228,71 @@
       '</div>'+
     '</div>';
     wireLandingAdmin();
+  }
+
+  // One labeled text input + (optionally) a size slider and a position
+  // slider, for a single line of hero text. `key` is the field's path
+  // inside the hero's config object (e.g. "role" or "extra1.text") — read
+  // by heroTextFormHtml() below to pre-fill the value, and written back by
+  // the delegated input handler in wireLandingAdmin() via the same path,
+  // so adding a field here only ever means adding one call to this
+  // function plus the matching key in HERO_A/B_TEXT_DEFAULTS — nothing
+  // else needs to change.
+  function heroTextRow(label, key, value, opts){
+    opts = opts || {};
+    return '<div class="admin-field"><label>'+label+'</label>'+
+      '<input type="text" data-field="'+key+'" value="'+escapeHtml(value || '')+'" maxlength="'+(opts.maxlength || 60)+'"'+(opts.disabled?' disabled':'')+'></div>';
+  }
+  function heroTextSizeRow(label, scaleKey, scaleVal, yKey, yVal, opts){
+    opts = opts || {};
+    var dis = opts.disabled ? ' disabled' : '';
+    var rows = ''+
+      '<div class="hero-text-size-row"><div class="row-label"><span>'+label+' size</span><span data-readout="'+scaleKey+'">'+Math.round(scaleVal*100)+'%</span></div>'+
+        '<input type="range" data-field="'+scaleKey+'" min="0.6" max="1.8" step="0.02" value="'+scaleVal+'"'+dis+'></div>';
+    if(yKey){
+      rows += ''+
+      '<div class="hero-text-size-row"><div class="row-label"><span>'+label+' position</span><span data-readout="'+yKey+'">'+yVal+'px</span></div>'+
+        '<input type="range" data-field="'+yKey+'" min="-30" max="30" step="1" value="'+yVal+'"'+dis+'></div>';
+    }
+    return rows;
+  }
+  function heroTextExtraBlock(n, cfg){
+    var ex = cfg['extra'+n];
+    var dis = !ex.enabled;
+    var cbId = 'heroExtra'+n+'Enabled';
+    return '<div class="hero-text-extra">'+
+      '<div class="admin-field row"><input type="checkbox" id="'+cbId+'" data-field="extra'+n+'.enabled"'+(ex.enabled?' checked':'')+'><label for="'+cbId+'">Extra line '+n+'</label></div>'+
+      heroTextRow('Text', 'extra'+n+'.text', ex.text, { maxlength:80, disabled:dis })+
+      heroTextSizeRow('Line', 'extra'+n+'.scale', ex.scale, 'extra'+n+'.y', ex.y, { disabled:dis })+
+    '</div>';
+  }
+  // Builds the whole editable-fields column for whichever hero is
+  // currently selected (heroPreviewWhich) — the fixed set of fields per
+  // hero matches HERO_A_TEXT_DEFAULTS / HERO_B_TEXT_DEFAULTS exactly (see
+  // the SQL comment): a few required lines with size/position control,
+  // plus two optional "extra line" slots either can turn on.
+  function heroTextFormHtml(which, cfg){
+    if(which === 'a'){
+      return ''+
+        heroTextRow('Name / Signature', 'name', cfg.name, { maxlength:40 })+
+        heroTextSizeRow('Name', 'name_scale', cfg.name_scale, 'name_y', cfg.name_y)+
+        heroTextRow('Role / Tagline', 'role', cfg.role, { maxlength:80 })+
+        heroTextSizeRow('Role', 'role_scale', cfg.role_scale, 'role_y', cfg.role_y)+
+        heroTextRow('Button Label', 'button_label', cfg.button_label, { maxlength:24 })+
+        heroTextExtraBlock(1, cfg)+
+        heroTextExtraBlock(2, cfg)+
+        '<div class="hero-text-size-row" style="margin-top:14px;"><div class="row-label"><span>Overlay darkness</span><span data-readout="scrim_opacity">'+Math.round(cfg.scrim_opacity*100)+'%</span></div>'+
+          '<input type="range" data-field="scrim_opacity" min="0" max="1" step="0.02" value="'+cfg.scrim_opacity+'"></div>';
+    }
+    return ''+
+      heroTextRow('Location', 'location', cfg.location, { maxlength:60 })+
+      heroTextSizeRow('Location', 'location_scale', cfg.location_scale, 'location_y', cfg.location_y)+
+      heroTextRow('Credit / Byline', 'credit', cfg.credit, { maxlength:60 })+
+      heroTextSizeRow('Credit', 'credit_scale', cfg.credit_scale, 'credit_y', cfg.credit_y)+
+      heroTextExtraBlock(1, cfg)+
+      heroTextExtraBlock(2, cfg)+
+      '<div class="hero-text-size-row" style="margin-top:14px;"><div class="row-label"><span>Overlay darkness</span><span data-readout="scrim_opacity">'+Math.round(cfg.scrim_opacity*100)+'%</span></div>'+
+        '<input type="range" data-field="scrim_opacity" min="0" max="1" step="0.02" value="'+cfg.scrim_opacity+'"></div>';
   }
 
   function landingFilteredPhotos(){
@@ -6378,6 +7393,115 @@
     wireCropDrag();
     applyCropStyle();
 
+    // ---- Work Title Backdrop (Hero B) — mode toggle, picker grid, upload,
+    // and "clear" (fall back to the same photo as the landing hero). No
+    // crop-drag tool for this one — deliberately simpler than the hero
+    // picker above; see the SQL comment for work_title_crop if a
+    // drag-to-reposition tool is ever wanted here too.
+    document.getElementById('workModeGallery').addEventListener('click', function(){
+      landingState.workMode = 'gallery';
+      drawLandingAdmin();
+    });
+    document.getElementById('workModeUpload').addEventListener('click', function(){
+      landingState.workMode = 'upload';
+      drawLandingAdmin();
+    });
+    if(landingState.workMode === 'gallery'){
+      drawWorkPickerGrid();
+      document.getElementById('workPickerSearch').addEventListener('input', function(){
+        workPickerQuery = this.value;
+        drawWorkPickerGrid();
+      });
+    }
+    var workUploadInput = document.getElementById('workUploadFile');
+    if(workUploadInput){
+      workUploadInput.addEventListener('change', async function(e){
+        var file = e.target.files[0];
+        if(!file) return;
+        var progressUi = wireUploadProgress('workUpload');
+        progressUi.show();
+        try{
+          var res = await uploadFile(file, null, true, progressUi.onProgress);
+          landingState.workUrl = res.url;
+          drawLandingAdmin();
+        } catch(err){
+          var el2 = document.getElementById('landingFormError');
+          el2.textContent = err.message; el2.style.display = 'block';
+        } finally {
+          progressUi.hide();
+        }
+      });
+    }
+    var workClearBtn = document.getElementById('workBackdropClearBtn');
+    if(workClearBtn) workClearBtn.addEventListener('click', function(){
+      landingState.workUrl = '';
+      drawLandingAdmin();
+    });
+
+    // ---- Hero Text: A/B tabs, device toggle, and the delegated field
+    // handler that both heroes' forms share (one listener on the shared
+    // container, not one per input — the fields differ between Hero A and
+    // Hero B, but the read/write-by-data-field logic doesn't need to).
+    document.getElementById('heroTextTabA').addEventListener('click', function(){
+      heroPreviewWhich = 'a';
+      drawLandingAdmin();
+    });
+    document.getElementById('heroTextTabB').addEventListener('click', function(){
+      heroPreviewWhich = 'b';
+      drawLandingAdmin();
+    });
+    document.getElementById('heroPreviewDesktopBtn').addEventListener('click', function(){
+      heroPreviewDevice = 'desktop';
+      document.getElementById('heroPreviewDesktopBtn').classList.add('active');
+      document.getElementById('heroPreviewMobileBtn').classList.remove('active');
+      updateHeroPreview();
+    });
+    document.getElementById('heroPreviewMobileBtn').addEventListener('click', function(){
+      heroPreviewDevice = 'mobile';
+      document.getElementById('heroPreviewMobileBtn').classList.add('active');
+      document.getElementById('heroPreviewDesktopBtn').classList.remove('active');
+      updateHeroPreview();
+    });
+
+    var heroTextForm = document.getElementById('heroTextForm');
+    // Writes `value` into cfg.a.b (from a "a.b" data-field path) without
+    // needing a switch/if per field — every field this form can ever grow
+    // is just another key in HERO_A_TEXT_DEFAULTS / HERO_B_TEXT_DEFAULTS
+    // plus a call to heroTextRow()/heroTextSizeRow() above; this write path
+    // never needs to change to support it.
+    function setHeroTextField(cfg, path, value){
+      var parts = path.split('.');
+      var obj = cfg;
+      for(var i=0; i<parts.length-1; i++) obj = obj[parts[i]];
+      obj[parts[parts.length-1]] = value;
+    }
+    heroTextForm.addEventListener('input', function(e){
+      var field = e.target.getAttribute('data-field');
+      if(!field) return;
+      var cfg = heroPreviewWhich === 'a' ? landingState.heroAText : landingState.heroBText;
+      var isCheckbox = e.target.type === 'checkbox';
+      var isRange = e.target.type === 'range';
+      var value = isCheckbox ? e.target.checked : (isRange ? parseFloat(e.target.value) : e.target.value);
+      setHeroTextField(cfg, field, value);
+      var readout = heroTextForm.querySelector('[data-readout="'+field+'"]');
+      if(readout) readout.textContent = field.indexOf('_y') !== -1 || field.slice(-2) === '.y' ? (value + 'px') : (Math.round(value*100) + '%');
+      if(isCheckbox){
+        // Toggling an extra line's "enabled" checkbox enables/disables its
+        // sibling text + size/position inputs in place — cheap DOM tweak,
+        // not a full form redraw, so nothing else on the page loses focus
+        // or mid-drag state over one checkbox click.
+        var group = e.target.closest('.hero-text-extra');
+        if(group){
+          group.querySelectorAll('input:not([type="checkbox"])').forEach(function(input){
+            input.disabled = !value;
+          });
+        }
+      }
+      scheduleHeroPreviewUpdate();
+    });
+
+    updateHeroPreview();
+
     document.getElementById('landingSaveBtn').addEventListener('click', async function(){
       if(!landingState.url){
         var el = document.getElementById('landingFormError');
@@ -6390,6 +7514,9 @@
         hero_image_url: landingState.url,
         hero_image_mode: landingState.mode,
         hero_crop: landingState.crop,
+        work_title_image_url: landingState.workUrl || null,
+        hero_a_text: landingState.heroAText,
+        hero_b_text: landingState.heroBText,
         updated_at: new Date().toISOString()
       };
       var result = await sb.from('about').update(payload).eq('id', 1);
@@ -6401,6 +7528,35 @@
       savedEl.style.display = 'inline';
       about = Object.assign({}, about, payload);
       renderHeroBackdrop(); // reflect the new image/crop on the live landing page immediately
+      renderHeroWorkBackdrop();
+      applyHeroTextConfig(); // and every hero text/size/position/overlay change
+    });
+  }
+
+  // Mirrors drawLandingPickerGrid() above for the Hero B backdrop picker —
+  // a separate grid/state (workPickerQuery, landingState.workUrl) rather
+  // than sharing the hero picker's, since the two images are independent
+  // and the admin may well want a different photo search open on each.
+  function drawWorkPickerGrid(){
+    var grid = document.getElementById('workPickerGrid');
+    if(!grid) return;
+    var q = workPickerQuery.trim().toLowerCase();
+    var items = adminPhotos.filter(function(p){ return p.published; });
+    if(q){
+      items = items.filter(function(p){
+        return [p.title, p.category, p.location].some(function(f){ return f && f.toLowerCase().indexOf(q) !== -1; });
+      });
+    }
+    grid.innerHTML = items.length ? items.map(function(p){
+      var selected = landingState.workUrl === p.image_url;
+      return '<div class="landing-picker-thumb'+(selected?' selected':'')+'" data-url="'+escapeHtml(p.image_url)+'" title="'+escapeHtml(p.title||'')+'"><img '+adminThumbAttrs(p.image_url, 160)+' alt=""></div>';
+    }).join('') : '<p class="admin-empty">No matching photos.</p>';
+    grid.querySelectorAll('.landing-picker-thumb').forEach(function(el){
+      el.addEventListener('click', function(){
+        landingState.workUrl = el.getAttribute('data-url');
+        landingState.workMode = 'gallery';
+        drawLandingAdmin();
+      });
     });
   }
 
@@ -6473,6 +7629,182 @@
   })();
 
   /* ---------- Watermark tab ---------- */
+  /* ---------- Storage tab (orphaned-file scanner + cleanup) ---------- */
+  function formatBytes(n){
+    if(n == null) return '—';
+    if(n < 1024) return n + ' B';
+    if(n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+    return (n/(1024*1024)).toFixed(1) + ' MB';
+  }
+
+  // Lists every object in `bucket`, paginating past Supabase Storage's
+  // default page size rather than assuming everything fits in one call —
+  // with 150+ photos × 2 buckets (public + private original each), this
+  // library is well past that default.
+  async function listAllStorageObjects(bucket){
+    var all = [];
+    var offset = 0;
+    var pageSize = 1000;
+    while(true){
+      var res = await sb.storage.from(bucket).list('', { limit: pageSize, offset: offset, sortBy: { column:'name', order:'asc' } });
+      if(res.error) throw new Error(res.error.message);
+      var items = res.data || [];
+      all = all.concat(items);
+      if(items.length < pageSize) break;
+      offset += pageSize;
+    }
+    // Storage list() can include folder-placeholder-style entries with no
+    // real id/metadata in some setups — filter those out defensively so
+    // they never get treated as a deletable file.
+    return all.filter(function(f){ return f && f.name && f.id; });
+  }
+
+  // Cross-references both storage buckets against every URL currently in
+  // use anywhere on the site — every photo (published or not), the
+  // landing hero, the work title backdrop, and the About profile photo —
+  // and returns whatever's left over: files nothing points to anymore,
+  // almost always left behind by a photo deletion or image replacement
+  // from before removeStorageFilesForUrls() existed. Safe by construction:
+  // a file only shows up here if NONE of those sources reference it, so a
+  // live, in-use file can never be flagged by mistake.
+  async function findOrphanedStorageFiles(){
+    var photosRes = await sb.from('photos').select('image_url');
+    if(photosRes.error) throw new Error(photosRes.error.message);
+    var aboutRes = await sb.from('about').select('hero_image_url, work_title_image_url, profile_image_url').eq('id', 1).single();
+    var aboutRow = (aboutRes && aboutRes.data) || {};
+    var inUseUrls = (photosRes.data || []).map(function(p){ return p.image_url; })
+      .concat([aboutRow.hero_image_url, aboutRow.work_title_image_url, aboutRow.profile_image_url]);
+
+    var inUsePublicPaths = {};
+    var inUseBaseNames = {};
+    inUseUrls.forEach(function(url){
+      var path = storagePathFromPublicUrl(url, BUCKET);
+      if(!path) return;
+      inUsePublicPaths[path] = true;
+      // "<timestamp>-<random>-web.<ext>" → "<timestamp>-<random>" — the
+      // shared prefix uploadFile() gives a photo's public copy AND its
+      // private original (see uploadFile()'s own comment on why the
+      // original's path isn't stored anywhere directly), used here to
+      // match originals that have no stored path of their own.
+      inUseBaseNames[path.replace(/-web\.[a-z0-9]+$/i, '')] = true;
+    });
+
+    var publicFiles = await listAllStorageObjects(BUCKET);
+    var originalFiles = await listAllStorageObjects(ORIGINALS_BUCKET);
+
+    var publicOrphans = publicFiles.filter(function(f){ return !inUsePublicPaths[f.name]; })
+      .map(function(f){ return { bucket: BUCKET, path: f.name, size: f.metadata && f.metadata.size }; });
+
+    var originalOrphans = originalFiles.filter(function(f){
+      return !inUseBaseNames[f.name.replace(/\.[a-z0-9]+$/i, '')];
+    }).map(function(f){ return { bucket: ORIGINALS_BUCKET, path: f.name, size: f.metadata && f.metadata.size }; });
+
+    return publicOrphans.concat(originalOrphans);
+  }
+
+  async function renderStorageAdmin(){
+    renderAdminStats();
+    adminScroll.innerHTML = '<p class="admin-empty">Scanning both storage buckets against every photo, the landing hero, the work title backdrop, and the profile photo — this can take a few seconds on a large library…</p>';
+    var orphans, allOriginals;
+    try{
+      orphans = await findOrphanedStorageFiles();
+      allOriginals = await listAllStorageObjects(ORIGINALS_BUCKET);
+    } catch(err){
+      adminScroll.innerHTML = '<div class="admin-form"><h3>Storage Cleanup</h3><p class="admin-error">Could not scan storage: '+escapeHtml(err.message)+'</p></div>';
+      return;
+    }
+    drawStorageAdmin(orphans, allOriginals);
+  }
+
+  function drawStorageAdmin(orphans, allOriginals){
+    var totalBytes = orphans.reduce(function(sum, o){ return sum + (o.size || 0); }, 0);
+    var originalsBytes = allOriginals.reduce(function(sum, f){ return sum + ((f.metadata && f.metadata.size) || 0); }, 0);
+    var html = ''+
+    '<div class="admin-form">'+
+      '<h3>Storage Cleanup</h3>'+
+      '<p class="sub" style="margin:0 0 4px;">Finds files sitting in storage that nothing on the site references anymore — the usual cause of storage usage climbing well past what your actual published photos would need. Cross-checked against every current photo (published or not), the landing hero, the work title backdrop, and the About profile photo, so nothing still in use can ever show up here. Deleting a photo or replacing its image now cleans up after itself automatically — this tool is for the leftovers from before that fix.</p>';
+
+    if(!orphans.length){
+      html += '<p class="admin-empty">No orphaned files found — storage is clean.</p>'+
+        '<div class="admin-form-actions"><button class="admin-btn secondary" id="storageRescanBtn">Rescan</button></div>';
+    } else {
+      html += ''+
+        '<p class="sub"><strong>'+orphans.length+'</strong> orphaned file'+(orphans.length===1?'':'s')+' found, totaling <strong>'+formatBytes(totalBytes)+'</strong>.</p>'+
+        '<div class="storage-orphan-list">'+orphans.map(function(o){
+          return '<div class="storage-orphan-row"><span class="storage-orphan-path" title="'+escapeHtml(o.path)+'">'+escapeHtml(o.path)+'</span><span class="storage-orphan-bucket">'+(o.bucket===ORIGINALS_BUCKET?'original':'public')+'</span><span class="storage-orphan-size">'+formatBytes(o.size)+'</span></div>';
+        }).join('')+'</div>'+
+        '<p class="admin-error" id="storageError" style="display:none;"></p>'+
+        '<div class="admin-form-actions">'+
+          '<button class="admin-btn secondary" id="storageRescanBtn">Rescan</button>'+
+          '<button class="admin-btn" id="storageDeleteBtn">Delete All ('+formatBytes(totalBytes)+')</button>'+
+        '</div>';
+    }
+
+    html += ''+
+      '<h3 style="margin-top:28px;">Private Originals Bucket</h3>'+
+      '<p class="sub" style="margin:0 0 4px;">Full-resolution masters are no longer stored on upload — every new photo now only creates the small, resized public copy the site actually shows. But if you were using this before that change, the "'+ORIGINALS_BUCKET+'" bucket may still be holding a full-resolution copy of every photo you\'ve ever uploaded, whether or not it\'s "orphaned" in the sense above — clearing it here is separate from the scan and reclaims that space immediately.</p>';
+
+    if(!allOriginals.length){
+      html += '<p class="admin-empty">The private originals bucket is empty — nothing to clear.</p>';
+    } else {
+      html += ''+
+        '<p class="sub"><strong>'+allOriginals.length+'</strong> file'+(allOriginals.length===1?'':'s')+' in "'+ORIGINALS_BUCKET+'", totaling <strong>'+formatBytes(originalsBytes)+'</strong>.</p>'+
+        '<p class="sub" style="color:#ff8b7a;">This deletes every full-resolution master you have, including ones still tied to live, published photos. Nothing on the site reads from this bucket, so the site itself is unaffected — but if you ever wanted an un-watermarked, full-quality copy of an older photo for a print or a re-edit, this is the only place it still exists. Once cleared, the only backup left is whatever you kept on your own device.</p>'+
+        '<p class="admin-error" id="originalsError" style="display:none;"></p>'+
+        '<div class="admin-form-actions">'+
+          '<button class="admin-btn secondary" id="originalsDeleteBtn">Delete All Originals ('+formatBytes(originalsBytes)+')</button>'+
+        '</div>';
+    }
+    html += '</div>';
+    adminScroll.innerHTML = html;
+
+    document.getElementById('storageRescanBtn').addEventListener('click', renderStorageAdmin);
+    var delBtn = document.getElementById('storageDeleteBtn');
+    if(delBtn) delBtn.addEventListener('click', async function(){
+      if(!confirm('Permanently delete '+orphans.length+' orphaned file'+(orphans.length===1?'':'s')+' ('+formatBytes(totalBytes)+')? This cannot be undone.')) return;
+      delBtn.disabled = true; delBtn.textContent = 'Deleting…';
+      try{
+        var byBucket = {};
+        orphans.forEach(function(o){ (byBucket[o.bucket] = byBucket[o.bucket] || []).push(o.path); });
+        for(var bucket in byBucket){
+          // Storage remove() has its own batch-size ceiling — chunk
+          // defensively rather than assuming an arbitrarily long list
+          // always succeeds in one call.
+          var paths = byBucket[bucket];
+          for(var i=0; i<paths.length; i+=100){
+            var chunk = paths.slice(i, i+100);
+            var res = await sb.storage.from(bucket).remove(chunk);
+            if(res.error) throw new Error(res.error.message);
+          }
+        }
+        renderStorageAdmin();
+      } catch(err){
+        delBtn.disabled = false; delBtn.textContent = 'Delete All ('+formatBytes(totalBytes)+')';
+        var errEl = document.getElementById('storageError');
+        errEl.textContent = err.message; errEl.style.display = 'block';
+      }
+    });
+
+    var origDelBtn = document.getElementById('originalsDeleteBtn');
+    if(origDelBtn) origDelBtn.addEventListener('click', async function(){
+      if(!confirm('Permanently delete ALL '+allOriginals.length+' files in the private originals bucket ('+formatBytes(originalsBytes)+')? This includes full-resolution masters for photos still live on the site. This cannot be undone.')) return;
+      origDelBtn.disabled = true; origDelBtn.textContent = 'Deleting…';
+      try{
+        var allPaths = allOriginals.map(function(f){ return f.name; });
+        for(var i=0; i<allPaths.length; i+=100){
+          var chunk = allPaths.slice(i, i+100);
+          var res = await sb.storage.from(ORIGINALS_BUCKET).remove(chunk);
+          if(res.error) throw new Error(res.error.message);
+        }
+        renderStorageAdmin();
+      } catch(err){
+        origDelBtn.disabled = false; origDelBtn.textContent = 'Delete All Originals ('+formatBytes(originalsBytes)+')';
+        var oErrEl = document.getElementById('originalsError');
+        oErrEl.textContent = err.message; oErrEl.style.display = 'block';
+      }
+    });
+  }
+
   async function renderWatermarkAdmin(){
     renderAdminStats();
     adminScroll.innerHTML = '<p class="admin-empty">Loading…</p>';
@@ -6727,7 +8059,8 @@
       savedEl.style.display = 'inline';
       about = Object.assign({}, about, payload); // keep in-memory `about` in sync
       renderHeroBackdrop(); // reflect a changed landing-page image straight away
-      renderHeroContact(); // reflect the change on the landing page straight away
+      renderHeroContact('heroContactA'); // reflect the change on the landing page straight away
+      renderHeroContact('heroContact');
       renderScenes(); // and in the deep-scroll contact scene, as before
     });
   }
